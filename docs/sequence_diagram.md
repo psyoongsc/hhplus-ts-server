@@ -36,31 +36,7 @@
             Deactivate Product
         ```
         
-    - P-3. 상품 판매 내역 조회
-        
-        ```mermaid
-        sequenceDiagram
-        	actor User as 유저
-        	participant Product as 상품
-        
-            User->>Product: 1. 상품 판매 내역 조회 요청<br/>(productId)
-            Activate Product
-        
-            Activate Product
-            Product->>Product: 2. 유효성 검증<br/>(상품)
-        
-            alt 검증 이상 시
-                Product-->>User: 3. 에러 응답
-            Deactivate Product
-            
-            else 검증 이상 무
-                Product-->>User: 3. 상품 판매 내역 응답
-            end
-        
-            Deactivate Product
-        ```
-        
-    - P-4. 인기 판매 상품 조회
+    - P-3. 인기 판매 상품 조회
         
         ```mermaid
         sequenceDiagram
@@ -81,7 +57,7 @@
             Deactivate Product
         ```
         
-    - P-5. 상품 재고 추가
+    - P-4. 상품 재고 추가
         
         ```mermaid
         sequenceDiagram
@@ -103,7 +79,7 @@
             Deactivate Product
         ```
         
-    - P-6. 상품 재고 차감
+    - P-5. 상품 재고 차감
         
         ```mermaid
         sequenceDiagram
