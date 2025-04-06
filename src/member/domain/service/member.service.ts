@@ -5,7 +5,7 @@ import { ChargeBalanceCommand } from "../dto/charge-balance.command";
 import { UseBalanceCommand } from "../dto/use-balance.command";
 
 @Injectable()
-export class WalletService {
+export class MemberService {
   async getBalance(command: GetBalanceCommand): Promise<BalanceResult> {
     const memberId = command.memberId;
 

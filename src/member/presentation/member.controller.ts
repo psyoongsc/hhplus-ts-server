@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, ParseIntPipe, Post } from "@nestjs/common";
-import { WalletService } from "../domain/service/wallet.service";
+import { MemberService } from "../domain/service/member.service";
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { ChargeBalanceControllerReqDto } from "./dto/charge-balance.req.dto";
 import { ChargeBalanceControllerResDto } from "./dto/charge-balance.res.dto";
@@ -9,10 +9,10 @@ import { GetBalanceControllerResDto } from "./dto/get-balance.res.dto";
 import { ChargeBalanceCommand } from "../domain/dto/charge-balance.command";
 import { UseBalanceCommand } from "../domain/dto/use-balance.command";
 
-@ApiTags("Wallet Management")
-@Controller("wallet")
-export class WalletController {
-  constructor(private readonly walletService: WalletService) {}
+@ApiTags("Member Management")
+@Controller("member")
+export class MemberController {
+  constructor(private readonly memberService: MemberService) {}
 
   @Get(":memberId")
   @ApiOperation({ summary: "getBalance" })
@@ -20,7 +20,7 @@ export class WalletController {
   @ApiResponse({ status: 200, description: "OK", type: GetBalanceControllerResDto })
   @ApiResponse({ status: 404, description: "사용자를 찾을 수 없습니다." })
   async getBalance(@Param("memberId", ParseIntPipe) memberId: number): Promise<GetBalanceControllerResDto> {
-    return await this.walletService.getBalance({ memberId });
+    return await this.memberService.getBalance({ memberId });
   }
 
   @Post("charge")
@@ -35,7 +35,7 @@ export class WalletController {
       ...chargeBalanceReqDto,
     };
 
-    return await this.walletService.charge(command);
+    return await this.memberService.charge(command);
   }
 
   @Post("use")
@@ -48,6 +48,6 @@ export class WalletController {
       ...useBalanceReqDto,
     };
 
-    return await this.walletService.charge(command);
+    return await this.memberService.charge(command);
   }
 }
