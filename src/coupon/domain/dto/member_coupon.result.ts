@@ -22,7 +22,7 @@ export class MemberCouponResult {
   offFigure: number;
 
   @IsBoolean()
-  @Type(()=>Boolean)
+  @Type(() => Boolean)
   @IsIn([true, false])
   isUsed: boolean;
 }

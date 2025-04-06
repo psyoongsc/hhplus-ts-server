@@ -5,7 +5,7 @@ import { IsArray } from "class-validator";
 
 export class GetPopularProductsResDto {
   @IsArray()
-  @Type(()=>ProductSalesStatResult)
+  @Type(() => ProductSalesStatResult)
   @ApiProperty({
     example: [
       { rank: 1, productId: 2, productName: "애플 맥세이프 충전기 20W", amount: 700, sales: 55300000 },

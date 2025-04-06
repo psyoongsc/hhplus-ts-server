@@ -10,7 +10,7 @@ export class OrderProductReqDto {
   memberId: number;
 
   @IsArray()
-  @Type(()=>Product)
+  @Type(() => Product)
   @ApiProperty({
     example: [
       { productId: 1, amount: 2 },

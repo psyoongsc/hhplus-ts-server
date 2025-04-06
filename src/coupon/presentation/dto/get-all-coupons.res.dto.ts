@@ -5,7 +5,7 @@ import { IsArray } from "class-validator";
 
 export class GetAllCouponsResDto {
   @IsArray()
-  @Type(()=>CouponResult)
+  @Type(() => CouponResult)
   @ApiProperty({
     example: [
       { id: 1, name: "10% 할인 쿠폰", offFigure: 10, stock: 5 },

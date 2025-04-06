@@ -5,7 +5,7 @@ import { IsArray } from "class-validator";
 
 export class GetAllProductsResDto {
   @IsArray()
-  @Type(()=>ProductResult)
+  @Type(() => ProductResult)
   @ApiProperty({
     example: [
       { id: 1, name: "다이슨 에어랩", stock: 121, price: 1200000 },

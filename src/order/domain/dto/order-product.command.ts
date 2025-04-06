@@ -7,7 +7,7 @@ export class OrderProductCommand {
   memberId: number;
 
   @IsArray()
-  @Type(()=>Product)
+  @Type(() => Product)
   products: Product[];
 }
 

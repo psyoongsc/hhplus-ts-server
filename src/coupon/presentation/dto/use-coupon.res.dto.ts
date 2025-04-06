@@ -28,7 +28,7 @@ export class UseCouponResDto {
   offFigure: number;
 
   @IsBoolean()
-  @Type(()=>Boolean)
+  @Type(() => Boolean)
   @IsIn([true, false])
   @ApiProperty({ example: "true", description: "사용 여부" })
   isUsed: boolean;
