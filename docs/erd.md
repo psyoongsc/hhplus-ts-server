@@ -24,6 +24,7 @@ erDiagram
     COUPON {
         int id PK "AI"
         string name
+        string type "NN"
         int offFigure "NN"
         int stock "NN"
     }
