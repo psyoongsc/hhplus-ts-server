@@ -3,9 +3,12 @@ import { BalanceResult } from "../dto/balance.result";
 import { GetBalanceCommand } from "../dto/get-balance.command";
 import { ChargeBalanceCommand } from "../dto/charge-balance.command";
 import { UseBalanceCommand } from "../dto/use-balance.command";
+import { MemberRepository } from "../memeber.repository";
 
 @Injectable()
 export class MemberService {
+  constructor(private readonly memberRepository: MemberRepository) {}
+
   async getBalance(command: GetBalanceCommand): Promise<BalanceResult> {
     const memberId = command.memberId;
 
