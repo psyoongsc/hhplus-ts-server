@@ -1,8 +1,11 @@
-import { PrismaClient } from '@prisma/client';
-import { IRepository } from './repository.interface';
+import { PrismaClient } from "@prisma/client";
+import { IRepository } from "./repository.interface";
 
 export class PrismaRepository<T, ID = number> implements IRepository<T, ID> {
-  constructor(private readonly prisma: PrismaClient, private readonly model: any) {}
+  constructor(
+    private readonly prisma: PrismaClient,
+    private readonly model: any,
+  ) {}
 
   async findAll(): Promise<T[]> {
     return this.model.findMany();
@@ -36,7 +39,7 @@ export class PrismaRepository<T, ID = number> implements IRepository<T, ID> {
   async find(options: {
     where?: Partial<T>;
     select?: Partial<Record<keyof T, boolean>>;
-    orderBy?: { [K in keyof T]?: 'asc' | 'desc' } | Array<{ [K in keyof T]?: 'asc' | 'desc' }>;
+    orderBy?: { [K in keyof T]?: "asc" | "desc" } | Array<{ [K in keyof T]?: "asc" | "desc" }>;
   }): Promise<T[]> {
     return this.model.findMany({
       where: options.where,

@@ -42,7 +42,7 @@ export class TypeORMRepositoryImpl<T, ID = number> implements IRepository<T, ID>
   async find(options: {
     where?: Partial<T>;
     select?: Partial<Record<keyof T, boolean>>;
-    orderBy?: { [K in keyof T]?: 'asc' | 'desc' } | Array<{ [K in keyof T]?: 'asc' | 'desc' }>;
+    orderBy?: { [K in keyof T]?: "asc" | "desc" } | Array<{ [K in keyof T]?: "asc" | "desc" }>;
   }): Promise<T[]> {
     const queryOptions: any = {};
 
