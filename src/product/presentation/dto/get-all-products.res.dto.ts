@@ -1,7 +1,11 @@
 import { ProductResult } from "@app/product/domain/dto/product.result";
 import { ApiProperty } from "@nestjs/swagger";
+import { Type } from "class-transformer";
+import { IsArray } from "class-validator";
 
 export class GetAllProductsResDto {
+  @IsArray()
+  @Type(()=>ProductResult)
   @ApiProperty({
     example: [
       { id: 1, name: "다이슨 에어랩", stock: 121, price: 1200000 },

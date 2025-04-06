@@ -1,12 +1,16 @@
 import { Product } from "@app/order/domain/dto/order-product.command";
 import { ApiProperty } from "@nestjs/swagger";
-import { IsInt } from "class-validator";
+import { Type } from "class-transformer";
+import { IsArray, IsInt, IsPositive } from "class-validator";
 
 export class OrderProductReqDto {
   @IsInt()
+  @IsPositive()
   @ApiProperty({ example: 1, description: "회원 식별자" })
   memberId: number;
 
+  @IsArray()
+  @Type(()=>Product)
   @ApiProperty({
     example: [
       { productId: 1, amount: 2 },
