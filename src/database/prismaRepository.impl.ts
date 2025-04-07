@@ -3,8 +3,8 @@ import { IRepository } from "./repository.interface";
 
 export class PrismaRepository<T, ID = number> implements IRepository<T, ID> {
   constructor(
-    private readonly prisma: PrismaClient,
-    private readonly model: any,
+    protected readonly prisma: PrismaClient,
+    protected readonly model: any,
   ) {}
 
   async findAll(): Promise<T[]> {
