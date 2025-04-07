@@ -8,4 +8,8 @@ export class MemberRepository extends PrismaRepository<Member> {
   constructor(prisma: PrismaClient) {
     super(prisma, prisma.user);
   }
+
+  async updateBalance(id: number, balance: number): Promise<Member> {
+    return this.updateById(id, { balance });
+  }
 }

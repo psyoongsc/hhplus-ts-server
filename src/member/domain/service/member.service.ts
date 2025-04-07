@@ -4,28 +4,67 @@ import { GetBalanceCommand } from "../dto/get-balance.command";
 import { ChargeBalanceCommand } from "../dto/charge-balance.command";
 import { UseBalanceCommand } from "../dto/use-balance.command";
 import { MemberRepository } from "../memeber.repository";
+import { Member } from "../entity/member.entity";
 
 @Injectable()
 export class MemberService {
   constructor(private readonly memberRepository: MemberRepository) {}
 
   async getBalance(command: GetBalanceCommand): Promise<BalanceResult> {
-    const memberId = command.memberId;
+    const memberId: number = command.memberId;
 
-    return { memberId: memberId, balance: 5000 };
+    const result: Member = await this.memberRepository.findById(memberId);
+
+    if (result === null) {
+      throw Error("MEMBER_NOT_FOUND");
+    }
+
+    const balanceResult: BalanceResult = {
+      memberId: result.id,
+      balance: result.balance,
+    };
+
+    return balanceResult;
   }
 
   async charge(command: ChargeBalanceCommand): Promise<BalanceResult> {
     const memberId = command.memberId;
     const amount = command.amount;
 
-    return { memberId: memberId, balance: 5000 + amount };
+    const member: Member = await this.memberRepository.findById(memberId);
+    if (member === null) {
+      throw Error("MEMBER_NOT_FOUND");
+    }
+
+    const result: Member = await this.memberRepository.updateBalance(memberId, member.balance + amount);
+
+    const balanceResult: BalanceResult = {
+      memberId: result.id,
+      balance: result.balance,
+    };
+
+    return balanceResult;
   }
 
   async use(command: UseBalanceCommand): Promise<BalanceResult> {
     const memberId = command.memberId;
     const amount = command.amount;
 
-    return { memberId: memberId, balance: 5000 - amount };
+    const member: Member = await this.memberRepository.findById(memberId);
+    if (member === null) {
+      throw Error("MEMBER_NOT_FOUND");
+    }
+    if (member.balance < amount) {
+      throw Error("INVALID_AMOUNT");
+    }
+
+    const result: Member = await this.memberRepository.updateBalance(memberId, member.balance - amount);
+
+    const balanceResult: BalanceResult = {
+      memberId: result.id,
+      balance: result.balance,
+    };
+
+    return balanceResult;
   }
 }
