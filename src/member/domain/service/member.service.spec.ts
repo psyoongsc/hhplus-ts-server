@@ -1,0 +1,158 @@
+import { Test, TestingModule } from "@nestjs/testing";
+import { MemberService } from "./member.service";
+import { MemberRepository } from "../memeber.repository";
+import { GetBalanceCommand } from "../dto/get-balance.command";
+import { ChargeBalanceCommand } from "../dto/charge-balance.command";
+import { UseBalanceCommand } from "../dto/use-balance.command";
+import { Member } from "../entity/member.entity";
+import { BalanceResult } from "../dto/balance.result";
+
+describe("MemberService", () => {
+  let memberService: MemberService;
+  let memberRepositoryStub: Partial<MemberRepository>;
+
+  beforeEach(async () => {
+    memberRepositoryStub = {
+      findAll: jest.fn(),
+      findById: jest.fn(),
+      create: jest.fn(),
+      updateById: jest.fn(),
+      deleteById: jest.fn(),
+      find: jest.fn(),
+      updateBalance: jest.fn(),
+    };
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [MemberService, { provide: MemberRepository, useValue: memberRepositoryStub }],
+    }).compile();
+
+    memberService = module.get<MemberService>(MemberService);
+  });
+
+  it("should be defined", () => {
+    expect(memberService).toBeDefined();
+  });
+
+  describe("getBalance", () => {
+    it("4000원이 충전되어 있는 사용자의 잔액을 확인하면 4000원이 있어야 함✅", async () => {
+      // mock & stub settings
+      const mockMember: Member = { id: 1, name: "psy", balance: 4000 };
+      (memberRepositoryStub.findById as jest.Mock).mockResolvedValue(mockMember);
+
+      // dto settings
+      const getBalanceCommand: GetBalanceCommand = { memberId: 1 };
+
+      // real service calls
+      const result: BalanceResult = await memberService.getBalance(getBalanceCommand);
+
+      // expectactions
+      expect(result.balance).toBe(mockMember.balance);
+      expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
+      expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1);
+    });
+
+    it("존재하지 않는 사용자의 잔액을 조회하면 'MEMBER_NOT_FOUND' 메시지와 함께 에러 발생❌", async () => {
+      // mock & stub settings
+      const mockMember = null;
+      (memberRepositoryStub.findById as jest.Mock).mockResolvedValue(mockMember);
+
+      // dto settings
+      const getBalanceCommand: GetBalanceCommand = { memberId: 1 };
+
+      // real service calls & expectations
+      await expect(memberService.getBalance(getBalanceCommand)).rejects.toThrow("MEMBER_NOT_FOUND");
+      expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("charge", () => {
+    it("1000원이 충전되어 있는 사용자가 2000원을 충전하면 3000원이 있어야 함✅", async () => {
+      // mock & stub settings
+      const mockFindMember: Member = { id: 1, name: "psy", balance: 1000 };
+      const mockChargedMember: Member = { id: 1, name: "psy", balance: 3000 };
+      (memberRepositoryStub.findById as jest.Mock).mockResolvedValue(mockFindMember);
+      (memberRepositoryStub.updateBalance as jest.Mock).mockResolvedValue(mockChargedMember);
+
+      // dto settings
+      const chargeBalanceCommand: ChargeBalanceCommand = { memberId: 1, amount: 2000 };
+
+      // real service calls
+      const result: BalanceResult = await memberService.charge(chargeBalanceCommand);
+
+      // expectactions
+      expect(result.balance).toBe(3000);
+      expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
+      expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1);
+      expect(memberRepositoryStub.updateBalance).toHaveBeenCalledTimes(1);
+      expect(memberRepositoryStub.updateBalance).toHaveBeenCalledWith(1, 3000);
+    });
+
+    it("존재하지 않는 사용자가 2000원을 충전하면 'MEMBER_NOT_FOUND' 메시지와 함께 에러 발생❌", async () => {
+      // mock & stub settings
+      const mockFindMember: Member = null;
+      (memberRepositoryStub.findById as jest.Mock).mockResolvedValue(mockFindMember);
+
+      // dto settings
+      const chargeBalanceCommand: ChargeBalanceCommand = { memberId: 1, amount: 2000 };
+
+      // real service calls & expectactions
+      await expect(memberService.charge(chargeBalanceCommand)).rejects.toThrow("MEMBER_NOT_FOUND");
+      expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
+      expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1);
+      expect(memberRepositoryStub.updateBalance).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("use", () => {
+    it("10000원이 충전되어 있는 사용자가 4000원을 사용하면 6000원이 있어야 함✅", async () => {
+      // mock & stub settings
+      const mockFindMember: Member = { id: 1, name: "psy", balance: 10000 };
+      const mockUsedMember: Member = { id: 1, name: "psy", balance: 6000 };
+      (memberRepositoryStub.findById as jest.Mock).mockResolvedValue(mockFindMember);
+      (memberRepositoryStub.updateBalance as jest.Mock).mockResolvedValue(mockUsedMember);
+
+      // dto settings
+      const useBalanceCommand: UseBalanceCommand = { memberId: 1, amount: 4000 };
+
+      // real service calls
+      const result: BalanceResult = await memberService.use(useBalanceCommand);
+
+      // expectactions
+      expect(result.balance).toBe(6000);
+      expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
+      expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1);
+      expect(memberRepositoryStub.updateBalance).toHaveBeenCalledTimes(1);
+      expect(memberRepositoryStub.updateBalance).toHaveBeenCalledWith(1, 6000);
+    });
+
+    it("존재하지 않는 사용자자가 4000원을 사용하면 'MEMBER_NOT_FOUND' 메시지와 함께 에러 발생❌", async () => {
+      // mock & stub settings
+      const mockFindMember: Member = null;
+      (memberRepositoryStub.findById as jest.Mock).mockResolvedValue(mockFindMember);
+
+      // dto settings
+      const useBalanceCommand: UseBalanceCommand = { memberId: 1, amount: 4000 };
+
+      // real service calls & expectactions
+      await expect(memberService.use(useBalanceCommand)).rejects.toThrow("MEMBER_NOT_FOUND");
+      expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
+      expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1);
+      expect(memberRepositoryStub.updateBalance).not.toHaveBeenCalled();
+    });
+
+    it("3000원이 충전되어 있는 사용자가 4000원을 사용하면 'INVALID_AMOUNT' 메시지와 함께 에러 발생❌", async () => {
+      // mock & stub settings
+      const mockFindMember: Member = { id: 1, name: "psy", balance: 3000 };
+      (memberRepositoryStub.findById as jest.Mock).mockResolvedValue(mockFindMember);
+
+      // dto settings
+      const useBalanceCommand: UseBalanceCommand = { memberId: 1, amount: 4000 };
+
+      // real service calls & expectations
+      await expect(memberService.use(useBalanceCommand)).rejects.toThrow("INVALID_AMOUNT");
+      expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
+      expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1);
+      expect(memberRepositoryStub.updateBalance).not.toHaveBeenCalled();
+    });
+  });
+});
