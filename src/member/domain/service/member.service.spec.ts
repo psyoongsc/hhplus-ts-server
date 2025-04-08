@@ -101,6 +101,21 @@ describe("MemberService", () => {
       expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1);
       expect(memberRepositoryStub.updateBalance).not.toHaveBeenCalled();
     });
+
+    it("1000원이 충전되어 있는 사용자가 2_147_482_648원을 충전하면 'OVER_BALANCE_LIMIT' 메시지와 함께 에러 발생❌", async () => {
+      // mock & stub settings
+      const mockFindMember: Member = { id: 1, name: "psy", balance: 3000 };
+      (memberRepositoryStub.findById as jest.Mock).mockResolvedValue(mockFindMember);
+
+      // dto settings
+      const chargeBalanceCommand: ChargeBalanceCommand = { memberId: 1, amount: 2_147_482_648 };
+
+      // real service calls & expectations
+      await expect(memberService.charge(chargeBalanceCommand)).rejects.toThrow("OVER_BALANCE_LIMIT");
+      expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
+      expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1);
+      expect(memberRepositoryStub.updateBalance).not.toHaveBeenCalled();
+    });
   });
 
   describe("use", () => {
@@ -149,7 +164,7 @@ describe("MemberService", () => {
       const useBalanceCommand: UseBalanceCommand = { memberId: 1, amount: 4000 };
 
       // real service calls & expectations
-      await expect(memberService.use(useBalanceCommand)).rejects.toThrow("INVALID_AMOUNT");
+      await expect(memberService.use(useBalanceCommand)).rejects.toThrow("NOT_ENOUTH_BALANCE");
       expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
       expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1);
       expect(memberRepositoryStub.updateBalance).not.toHaveBeenCalled();

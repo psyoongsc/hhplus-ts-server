@@ -64,8 +64,8 @@ export class MemberController {
       switch (error.message) {
         case "MEMBER_NOT_FOUND":
           throw new NotFoundException("회원을 찾을 수 없습니다.");
-        case "INVALID_AMOUNT":
-          throw new BadRequestException("충전 금액이 유효하지 않습니다.");
+        case "OVER_BALANCE_LIMIT":
+          throw new BadRequestException("충전 후 잔액이 충전 가능 금액 2_147_483_647원을 초과합니다.");
         default:
           throw error;
       }
@@ -88,8 +88,8 @@ export class MemberController {
       switch (error.message) {
         case "MEMBER_NOT_FOUND":
           throw new NotFoundException("회원을 찾을 수 없습니다.");
-        case "INVALID_AMOUNT":
-          throw new BadRequestException("충전 금액이 유효하지 않습니다.");
+        case "NOT_ENOUTH_BALANCE":
+          throw new BadRequestException("사용 할 수 있는 잔액이 충분하지 않습니다.");
         default:
           throw error;
       }

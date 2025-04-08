@@ -35,6 +35,9 @@ export class MemberService {
     if (member === null) {
       throw Error("MEMBER_NOT_FOUND");
     }
+    if (member.balance + amount > 2_147_483_647) {
+      throw Error("OVER_BALANCE_LIMIT")
+    }
 
     const result: Member = await this.memberRepository.updateBalance(memberId, member.balance + amount);
 
@@ -55,7 +58,7 @@ export class MemberService {
       throw Error("MEMBER_NOT_FOUND");
     }
     if (member.balance < amount) {
-      throw Error("INVALID_AMOUNT");
+      throw Error("NOT_ENOUTH_BALANCE");
     }
 
     const result: Member = await this.memberRepository.updateBalance(memberId, member.balance - amount);
