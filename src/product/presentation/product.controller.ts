@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, NotFoundException, Post } from "@nestjs/common";
 import { ProductService } from "../domain/service/product.service";
 import { GetAllProductsResDto } from "./dto/get-all-products.res.dto";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
@@ -20,7 +20,7 @@ export class ProductController {
 
   @Get()
   @ApiOperation({ summary: "getAllProducts" })
-  @ApiResponse({ status: 200, description: "OK", type: GetAllProductsResDto })
+  @ApiResponse({ status: 200, description: "200 - OK", type: GetAllProductsResDto })
   async getAllProducts(): Promise<GetAllProductsResDto> {
     const products = await this.productService.getAllProducts();
 
@@ -29,45 +29,77 @@ export class ProductController {
 
   @Post("")
   @ApiOperation({ summary: "getProduct" })
-  @ApiResponse({ status: 200, description: "OK", type: GetProductResDto })
-  @ApiResponse({ status: 404, description: "상품을 찾을 수 없습니다." })
+  @ApiResponse({ status: 200, description: "200 - OK", type: GetProductResDto })
+  @ApiResponse({ status: 404, description: "404 - NotFound", type: NotFoundException })
   async getProduct(@Body() getProductReqDto: GetProductReqDto): Promise<GetProductResDto> {
     const command: GetProductCommand = {
       ...getProductReqDto,
     };
 
-    return await this.productService.getProduct(command);
+    try {
+      return await this.productService.getProduct(command);
+    } catch (error) {
+      switch (error.message) {
+        case "PRODUCT_NOT_FOUND":
+          throw new NotFoundException("상품을 찾을 수 없습니다.");
+        default:
+          throw error;
+      }
+    }
+    
   }
 
   @Post("stock/add")
   @ApiOperation({ summary: "addStock" })
-  @ApiResponse({ status: 200, description: "OK", type: AddStockResDto })
-  @ApiResponse({ status: 400, description: "재고 추가량이 유효하지 않습니다." })
-  @ApiResponse({ status: 404, description: "상품을 찾을 수 없습니다." })
+  @ApiResponse({ status: 200, description: "200 - OK", type: GetProductResDto })
+  @ApiResponse({ status: 400, description: "400 - BadRequest", type: BadRequestException })
+  @ApiResponse({ status: 404, description: "404 - NotFound", type: NotFoundException })
   async addStock(@Body() addStockReqDto: AddStockReqDto): Promise<AddStockResDto> {
     const command: AddStockCommand = {
       ...addStockReqDto,
     };
 
-    return await this.productService.addStock(command);
+    try {
+      return await this.productService.addStock(command);
+    } catch (error) {
+      switch (error.message) {
+        case "PRODUCT_NOT_FOUND":
+          throw new NotFoundException("상품을 찾을 수 없습니다.");
+        case "OVER_STOCK_LIMIT":
+          throw new NotFoundException("재고 추가 후 재고량이 최대 재고량인 2_147_483_647개 보다 많습니다.");
+        default:
+          throw error;
+      }
+    }
   }
 
   @Post("stock/deduct")
   @ApiOperation({ summary: "deductStock" })
-  @ApiResponse({ status: 200, description: "OK", type: DeductStockResDto })
-  @ApiResponse({ status: 400, description: "재고 추가량이 유효하지 않습니다." })
-  @ApiResponse({ status: 404, description: "상품을 찾을 수 없습니다." })
+  @ApiResponse({ status: 200, description: "200 - OK", type: GetProductResDto })
+  @ApiResponse({ status: 400, description: "400 - BadRequest", type: BadRequestException })
+  @ApiResponse({ status: 404, description: "404 - NotFound", type: NotFoundException })
   async deductStock(@Body() deductStockReqDto: DeductStockReqDto): Promise<DeductStockResDto> {
     const command: DeductStockCommand = {
       ...deductStockReqDto,
     };
 
-    return await this.productService.deductStock(command);
+    try {
+      return await this.productService.deductStock(command);
+    } catch (error) {
+      switch (error.message) {
+        case "PRODUCT_NOT_FOUND":
+          throw new NotFoundException("상품을 찾을 수 없습니다.");
+        case "NOT_ENOUGH_STOCK":
+          throw new NotFoundException("잔여 재고가 부족합니다.");
+        default:
+          throw error;
+      }
+    }
   }
 
   @Get("top5")
   @ApiOperation({ summary: "getPopularProducts" })
-  @ApiResponse({ status: 200, description: "OK", type: GetPopularProductsResDto })
+  @ApiResponse({ status: 200, description: "200 - OK", type: GetProductResDto })
   async getPopularProducts(): Promise<GetPopularProductsResDto> {
     const products = await this.productService.getPopularProducts();
 
