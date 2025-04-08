@@ -12,7 +12,7 @@ erDiagram
     
     MEMBER {
         int id PK "AI"
-        string name
+        string name "NN"
         int balance "NN"
     }
     MEMBER_COUPON {
@@ -23,7 +23,7 @@ erDiagram
     }
     COUPON {
         int id PK "AI"
-        string name
+        string name "NN"
         string type "NN"
         int offFigure "NN"
         int stock "NN"
@@ -31,9 +31,9 @@ erDiagram
     ORDER {
         int id PK "AI"
         int memberId FK "NN"
-        int couponId FK
+        int couponId FK 
         int totalSales "NN"
-        int discountedSales
+        int discountedSales "NN"
         string status "NN"
     }
     ORDER_PRODUCT {
@@ -44,7 +44,7 @@ erDiagram
     }
     PRODUCT {
         int id PK "AI"
-        string name
+        string name "NN"
         int stock "NN"
         int price "NN"
     }
