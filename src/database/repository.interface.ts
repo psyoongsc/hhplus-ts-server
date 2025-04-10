@@ -1,3 +1,5 @@
+import { Member } from "@prisma/client";
+
 export interface IRepository<T, ID = number> {
   findAll(): Promise<T[]>;
   findById(id: ID): Promise<T | null>;
@@ -11,4 +13,5 @@ export interface IRepository<T, ID = number> {
     select?: Partial<Record<keyof T, boolean>>;
     orderBy?: { [K in keyof T]?: "asc" | "desc" } | Array<{ [K in keyof T]?: "asc" | "desc" }>;
   }): Promise<T[]>;
+  upsert(options: { where: Partial<T>; create: T; update: Partial<T> }): Promise<T>;
 }

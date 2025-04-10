@@ -17,7 +17,7 @@ export class PrismaRepository<T, ID = number> implements IRepository<T, ID> {
     });
   }
 
-  async create(entity: T): Promise<T> {
+  async create(entity: Omit<T, "id">): Promise<T> {
     return this.model.create({
       data: entity,
     });
