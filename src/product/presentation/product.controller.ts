@@ -11,7 +11,6 @@ import { AddStockCommand } from "../domain/dto/add-stock.command";
 import { DeductStockReqDto } from "./dto/deduct-stock.req.dto";
 import { DeductStockResDto } from "./dto/deduct-stock.res.dto";
 import { DeductStockCommand } from "../domain/dto/deduct-stock.command";
-import { GetPopularProductsResDto } from "./dto/get-popular-products.res.dto";
 
 @ApiTags("Product Management")
 @Controller("product")
@@ -46,7 +45,6 @@ export class ProductController {
           throw error;
       }
     }
-    
   }
 
   @Post("stock/add")
@@ -95,14 +93,5 @@ export class ProductController {
           throw error;
       }
     }
-  }
-
-  @Get("top5")
-  @ApiOperation({ summary: "getPopularProducts" })
-  @ApiResponse({ status: 200, description: "200 - OK", type: GetProductResDto })
-  async getPopularProducts(): Promise<GetPopularProductsResDto> {
-    const products = await this.productService.getPopularProducts();
-
-    return { products: products };
   }
 }

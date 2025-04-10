@@ -1,4 +1,4 @@
-import { ProductSalesStatResult } from "@app/product/domain/dto/product-sales-stat.result";
+import { ProductSalesStatResult } from "../../domain/dto/product-sales-stat.result";
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
 import { IsArray } from "class-validator";

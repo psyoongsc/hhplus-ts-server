@@ -1,18 +1,16 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { ProductRepository } from "../product.repository";
-import { ProductSalesStatRepository } from "../product_sales_stat.repository";
+import { ProductRepository } from "../infrastructure/product.repository";
 import { ProductService } from "./product.service";
 import { Product } from "../entity/product.entity";
-import { Product_Sales_Stat } from "../entity/product_sales_stat.entity";
 import { ProductResult } from "../dto/product.result";
 import { GetProductCommand } from "../dto/get-product.command";
 import { AddStockCommand } from "../dto/add-stock.command";
 import { DeductStockCommand } from "../dto/deduct-stock.command";
+import { IPRODUCT_REPOSITORY } from "../product.repository.interface";
 
 describe("ProductService", () => {
   let productService: ProductService;
   let productRepositoryStub: Partial<ProductRepository>;
-  let productSalesStatRepositoryStub: Partial<ProductSalesStatRepository>;
 
   let mockProducts: Product[] = [
     { id: 1, name: "다이슨 에어랩", stock: 121, price: 1200000 },
@@ -22,16 +20,6 @@ describe("ProductService", () => {
     { id: 5, name: "미니 향균 티슈 250매", stock: 37, price: 2500 },
     { id: 6, name: "아디다스 삼선 슬리퍼 275mm", stock: 15, price: 65000 },
     { id: 7, name: "모나미 볼펜 12자루", stock: 1000, price: 5900 },
-  ];
-
-  let today = new Date();
-  let dateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDay());
-  let mockTop5: Product_Sales_Stat[] = [
-    { id: 1, productId: 2, salesDate: dateOnly, total_amount: 700, total_sales: 55300000 },
-    { id: 2, productId: 5, salesDate: dateOnly, total_amount: 342, total_sales: 855000 },
-    { id: 3, productId: 7, salesDate: dateOnly, total_amount: 321, total_sales: 321000 },
-    { id: 4, productId: 1, salesDate: dateOnly, total_amount: 50, total_sales: 60500000 },
-    { id: 5, productId: 3, salesDate: dateOnly, total_amount: 1, total_sales: 24900 },
   ];
 
   beforeEach(async () => {
@@ -45,21 +33,8 @@ describe("ProductService", () => {
       updateStock: jest.fn(),
     };
 
-    productSalesStatRepositoryStub = {
-      findAll: jest.fn(),
-      findById: jest.fn(),
-      create: jest.fn(),
-      updateById: jest.fn(),
-      deleteById: jest.fn(),
-      find: jest.fn(),
-    };
-
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        ProductService,
-        { provide: ProductRepository, useValue: productRepositoryStub },
-        { provide: ProductSalesStatRepository, useValue: productSalesStatRepositoryStub },
-      ],
+      providers: [ProductService, { provide: IPRODUCT_REPOSITORY, useValue: productRepositoryStub }],
     }).compile();
 
     productService = module.get<ProductService>(ProductService);
@@ -190,7 +165,7 @@ describe("ProductService", () => {
       (productRepositoryStub.findById as jest.Mock).mockResolvedValue(null);
 
       // dto settings
-      const command: DeductStockCommand = { productId: 10, amount: 1};
+      const command: DeductStockCommand = { productId: 10, amount: 1 };
 
       // real service calls & expectactions
       expect(productService.deductStock(command)).rejects.toThrow("PRODUCT_NOT_FOUND");
@@ -205,21 +180,12 @@ describe("ProductService", () => {
 
       // dto settings
       const command: DeductStockCommand = { productId: 4, amount: 1 };
-      
+
       // real service calls & expectactions
       expect(productService.deductStock(command)).rejects.toThrow("NOT_ENOUGH_STOCK");
       expect(productRepositoryStub.findById).toHaveBeenCalledTimes(1);
       expect(productRepositoryStub.findById).toHaveBeenCalledWith(4);
       expect(productRepositoryStub.updateStock).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("getPopularProducts", () => {
-    it("D-3 ~ D-1 기간 동안에 최고 판매량을 기록한 5개의 제품이 조회 됨✅", async () => {
-      // mock & stub settings
-      // dto settings
-      // real service calls
-      // expectactions
     });
   });
 });
