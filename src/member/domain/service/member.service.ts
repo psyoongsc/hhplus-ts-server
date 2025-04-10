@@ -1,14 +1,22 @@
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { BalanceResult } from "../dto/balance.result";
 import { GetBalanceCommand } from "../dto/get-balance.command";
 import { ChargeBalanceCommand } from "../dto/charge-balance.command";
 import { UseBalanceCommand } from "../dto/use-balance.command";
-import { MemberRepository } from "../memeber.repository";
+import { MemberRepository } from "../infrastructure/memeber.repository";
 import { Member } from "../entity/member.entity";
+import { BalanceHisotryRepository } from "../infrastructure/balanceHistory.repository";
+import { IMEMBER_REPOSITORY } from "../member.repository.interface";
+import { IBALANCE_HISTORY_REPOSITORY } from "../balanceHistory.repository.interface";
 
 @Injectable()
 export class MemberService {
-  constructor(private readonly memberRepository: MemberRepository) {}
+  constructor(
+    @Inject(IMEMBER_REPOSITORY)
+    private readonly memberRepository: MemberRepository,
+    @Inject(IBALANCE_HISTORY_REPOSITORY)
+    private readonly balanceHistoryRepository: BalanceHisotryRepository,
+  ) {}
 
   async getBalance(command: GetBalanceCommand): Promise<BalanceResult> {
     const memberId: number = command.memberId;
@@ -40,6 +48,7 @@ export class MemberService {
     }
 
     const result: Member = await this.memberRepository.updateBalance(memberId, member.balance + amount);
+    await this.balanceHistoryRepository.addHistory(memberId, amount);
 
     const balanceResult: BalanceResult = {
       memberId: result.id,
@@ -62,6 +71,7 @@ export class MemberService {
     }
 
     const result: Member = await this.memberRepository.updateBalance(memberId, member.balance - amount);
+    await this.balanceHistoryRepository.addHistory(memberId, -1 * amount);
 
     const balanceResult: BalanceResult = {
       memberId: result.id,

@@ -1,15 +1,19 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { MemberService } from "./member.service";
-import { MemberRepository } from "../memeber.repository";
+import { MemberRepository } from "../infrastructure/memeber.repository";
 import { GetBalanceCommand } from "../dto/get-balance.command";
 import { ChargeBalanceCommand } from "../dto/charge-balance.command";
 import { UseBalanceCommand } from "../dto/use-balance.command";
 import { Member } from "../entity/member.entity";
 import { BalanceResult } from "../dto/balance.result";
+import { BalanceHisotryRepository } from "../infrastructure/balanceHistory.repository";
+import { IMEMBER_REPOSITORY } from "../member.repository.interface";
+import { IBALANCE_HISTORY_REPOSITORY } from "../balanceHistory.repository.interface";
 
 describe("MemberService", () => {
   let memberService: MemberService;
   let memberRepositoryStub: Partial<MemberRepository>;
+  let balanceHistoryRepositoryStub: Partial<BalanceHisotryRepository>;
 
   beforeEach(async () => {
     memberRepositoryStub = {
@@ -21,9 +25,22 @@ describe("MemberService", () => {
       find: jest.fn(),
       updateBalance: jest.fn(),
     };
+    balanceHistoryRepositoryStub = {
+      findAll: jest.fn(),
+      findById: jest.fn(),
+      create: jest.fn(),
+      updateById: jest.fn(),
+      deleteById: jest.fn(),
+      find: jest.fn(),
+      addHistory: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [MemberService, { provide: MemberRepository, useValue: memberRepositoryStub }],
+      providers: [
+        MemberService,
+        { provide: IMEMBER_REPOSITORY, useValue: memberRepositoryStub },
+        { provide: IBALANCE_HISTORY_REPOSITORY, useValue: balanceHistoryRepositoryStub },
+      ],
     }).compile();
 
     memberService = module.get<MemberService>(MemberService);
@@ -85,6 +102,8 @@ describe("MemberService", () => {
       expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1);
       expect(memberRepositoryStub.updateBalance).toHaveBeenCalledTimes(1);
       expect(memberRepositoryStub.updateBalance).toHaveBeenCalledWith(1, 3000);
+      expect(balanceHistoryRepositoryStub.addHistory).toHaveBeenCalledTimes(1);
+      expect(balanceHistoryRepositoryStub.addHistory).toHaveBeenCalledWith(1, 2000);
     });
 
     it("존재하지 않는 사용자가 2000원을 충전하면 'MEMBER_NOT_FOUND' 메시지와 함께 에러 발생❌", async () => {
@@ -100,6 +119,7 @@ describe("MemberService", () => {
       expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
       expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1);
       expect(memberRepositoryStub.updateBalance).not.toHaveBeenCalled();
+      expect(balanceHistoryRepositoryStub.addHistory).not.toHaveBeenCalled();
     });
 
     it("1000원이 충전되어 있는 사용자가 2_147_482_648원을 충전하면 'OVER_BALANCE_LIMIT' 메시지와 함께 에러 발생❌", async () => {
@@ -115,6 +135,7 @@ describe("MemberService", () => {
       expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
       expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1);
       expect(memberRepositoryStub.updateBalance).not.toHaveBeenCalled();
+      expect(balanceHistoryRepositoryStub.addHistory).not.toHaveBeenCalled();
     });
   });
 
@@ -138,6 +159,8 @@ describe("MemberService", () => {
       expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1);
       expect(memberRepositoryStub.updateBalance).toHaveBeenCalledTimes(1);
       expect(memberRepositoryStub.updateBalance).toHaveBeenCalledWith(1, 6000);
+      expect(balanceHistoryRepositoryStub.addHistory).toHaveBeenCalledTimes(1);
+      expect(balanceHistoryRepositoryStub.addHistory).toHaveBeenCalledWith(1, -4000);
     });
 
     it("존재하지 않는 사용자자가 4000원을 사용하면 'MEMBER_NOT_FOUND' 메시지와 함께 에러 발생❌", async () => {
@@ -153,6 +176,7 @@ describe("MemberService", () => {
       expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
       expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1);
       expect(memberRepositoryStub.updateBalance).not.toHaveBeenCalled();
+      expect(balanceHistoryRepositoryStub.addHistory).not.toHaveBeenCalled();
     });
 
     it("3000원이 충전되어 있는 사용자가 4000원을 사용하면 'INVALID_AMOUNT' 메시지와 함께 에러 발생❌", async () => {
@@ -168,6 +192,7 @@ describe("MemberService", () => {
       expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
       expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1);
       expect(memberRepositoryStub.updateBalance).not.toHaveBeenCalled();
+      expect(balanceHistoryRepositoryStub.addHistory).not.toHaveBeenCalled();
     });
   });
 });
