@@ -22,17 +22,6 @@ export class IssueCouponResDto {
   @ApiProperty({ example: "1", description: "쿠폰 식별자" })
   couponId: number;
 
-  @IsString()
-  @MaxByteLength(191)
-  @ApiProperty({ example: "10% 할인 쿠폰", description: "쿠폰명" })
-  couponName: string;
-
-  @IsInt()
-  @IsPositive()
-  @Max(2_147_483_647)
-  @ApiProperty({ example: "10", description: "할인율" })
-  offFigure: number;
-
   @IsBoolean()
   @Type(() => Boolean)
   @IsIn([true, false])

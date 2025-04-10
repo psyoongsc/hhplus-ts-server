@@ -20,6 +20,7 @@ model Member {
 
   balanceHistories Balance_History[]
   payments         Payment[]         @relation("MemberToPayment")
+  memberCoupons    Member_Coupon[]
 }
 
 model Balance_History {
@@ -75,12 +76,35 @@ model Payment {
   id             Int      @id @default(autoincrement())
   orderId        Int      @unique
   memberId       Int
-  couponId       Int?
+  couponId       Int?     @unique
   status         String
   paid_amount    Int      @default(0)
   approved_at    DateTime
 
-  order  Order  @relation("OrderToPayment", fields: [orderId], references: [id])
-  member Member @relation("MemberToPayment", fields: [memberId], references: [id])
-  // coupon        Coupon?  @relation(fields: [couponId], references: [id]) // Coupon 모델이 있다면 연결
+  order          Order            @relation("OrderToPayment", fields: [orderId], references: [id])
+  member         Member           @relation("MemberToPayment", fields: [memberId], references: [id])
+  coupon         Member_Coupon?   @relation("CouponToPayment", fields: [couponId], references: [id])
+}
+
+model Coupon {
+  id            Int     @id @default(autoincrement())
+  name          String
+  type          String
+  offFigure     Int
+  stock         Int
+
+  memberCoupons Member_Coupon[]
+}
+
+model Member_Coupon {
+  id            Int       @id @default(autoincrement())
+  memberId      Int
+  couponId      Int
+  isUsed        Boolean
+
+  member        Member    @relation(fields: [memberId], references: [id])
+  coupon        Coupon    @relation(fields: [couponId], references: [id])
+  payment       Payment?  @relation("CouponToPayment")
+
+  @@unique([memberId, couponId])
 }

@@ -18,15 +18,6 @@ export class MemberCouponResult {
   @Max(2_147_483_647)
   couponId: number;
 
-  @IsString()
-  @MaxByteLength(191)
-  couponName: string;
-
-  @IsInt()
-  @IsPositive()
-  @Max(2_147_483_647)
-  offFigure: number;
-
   @IsBoolean()
   @Type(() => Boolean)
   @IsIn([true, false])
