@@ -1,5 +1,5 @@
 import { Type } from "class-transformer";
-import { IsArray, IsInt, IsPositive, Max } from "class-validator";
+import { IsArray, IsInt, IsPositive, Max, Min } from "class-validator";
 
 export class OrderProductCommand {
   @IsInt()
@@ -17,6 +17,11 @@ export class Product {
   @IsPositive()
   @Max(2_147_483_647)
   id: number;
+
+  @IsInt()
+  @Min(0)
+  @Max(2_147_483_647)
+  price: number;
 
   @IsInt()
   @IsPositive()

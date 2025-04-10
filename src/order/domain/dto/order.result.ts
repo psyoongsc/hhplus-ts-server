@@ -13,19 +13,9 @@ export class OrderResult {
   memberId: number;
 
   @IsInt()
-  @IsPositive()
-  @Max(2_147_483_647)
-  couponId: number;
-
-  @IsInt()
   @Min(0)
   @Max(2_147_483_647)
   totalSales: number;
-
-  @IsInt()
-  @Min(0)
-  @Max(2_147_483_647)
-  discountedSales: number;
 
   @IsEnum(OrderResult)
   status: OrderStatus;

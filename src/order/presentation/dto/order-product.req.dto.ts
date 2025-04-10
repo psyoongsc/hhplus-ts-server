@@ -14,8 +14,8 @@ export class OrderProductReqDto {
   @Type(() => Product)
   @ApiProperty({
     example: [
-      { productId: 1, amount: 2 },
-      { productId: 3, amount: 1 },
+      { productId: 1, price: 1200000, amount: 2 },
+      { productId: 3, price: 24900, amount: 1 },
     ],
     description: "주문 할 상품 리스트",
   })
