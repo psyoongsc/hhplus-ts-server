@@ -11,6 +11,10 @@ export class CouponResult {
   @MaxByteLength(191)
   name: string;
 
+  @IsString()
+  @MaxByteLength(191)
+  type: string;
+
   @IsInt()
   @IsPositive()
   @Max(2_147_483_647)
