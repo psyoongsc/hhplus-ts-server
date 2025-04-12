@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Member {
+  id      Int    @id @default(autoincrement())
+  name    String @default("anonymous")
+  balance Int    @default(0)
+
+  balanceHistories Balance_History[]
+  payments         Payment[]         @relation("MemberToPayment")
+}
+
+model Balance_History {
+  id        Int      @id @default(autoincrement())
+  memberId  Int
+  amount    Int
+  createdAt DateTime @default(now())
+
+  member Member @relation(fields: [memberId], references: [id])
+}
+
+model Product {
+  id    Int    @id @default(autoincrement())
+  name  String @default("anonymous")
+  stock Int    @default(0)
+  price Int    @default(0)
+
+  orderProducts Order_Product[] @relation("ProductToOrderProduct")
+}
+
+model Product_Sales_Stat {
+  id           Int      @id @default(autoincrement())
+  productId    Int
+  productName  String
+  salesDate    DateTime
+  total_amount Int      @default(0)
+  total_sales  Int      @default(0)
+}
+
+model Order {
+  id         Int      @id @default(autoincrement())
+  memberId   Int
+  totalSales Int
+  status     String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now())
+
+  orderProducts Order_Product[] @relation("OrderToOrderProduct")
+  payment       Payment?         @relation("OrderToPayment")
+}
+
+model Order_Product {
+  id        Int @id @default(autoincrement())
+  orderId   Int
+  productId Int
+  amount    Int
+
+  order   Order   @relation("OrderToOrderProduct", fields: [orderId], references: [id])
+  product Product @relation("ProductToOrderProduct", fields: [productId], references: [id])
+}
+
+model Payment {
+  id             Int      @id @default(autoincrement())
+  orderId        Int      @unique
+  memberId       Int
+  couponId       Int?
+  status         String
+  paid_amount    Int      @default(0)
+  approved_at    DateTime
+
+  order  Order  @relation("OrderToPayment", fields: [orderId], references: [id])
+  member Member @relation("MemberToPayment", fields: [memberId], references: [id])
+  // coupon        Coupon?  @relation(fields: [couponId], references: [id]) // Coupon 모델이 있다면 연결
+}

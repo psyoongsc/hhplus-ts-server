@@ -1,50 +1,72 @@
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { OrderProductCommand, Product } from "../dto/order-product.command";
 import { OrderResult } from "../dto/order.result";
 import { OrderStatus } from "../dto/order-status.enum";
 import { CancelOrderCommand } from "../dto/cancel-order.command";
-import { PayOrderCommand } from "../dto/pay-order.command";
+import { OrderRepository } from "../infrastructure/order.repository";
+import { OrderProductRepository } from "../infrastructure/order_product.repository";
+import { getEnumFromValue } from "@app/common/enum.common";
+import { IORDER_REPOSITORY } from "../order.repository.interface";
+import { IORDER_PRODUCT_REPOSITORY } from "../order_product.repository.interface";
+import { GetOrderCommand } from "../dto/get-order.command";
 
+// TODO - 단위 테스트 작성 해야함
 @Injectable()
 export class OrderService {
+  constructor(
+    @Inject(IORDER_REPOSITORY)
+    private readonly orderRepository: OrderRepository,
+    @Inject(IORDER_PRODUCT_REPOSITORY)
+    private readonly orderProductRepository: OrderProductRepository,
+  ) {}
+
   async orderProduct(command: OrderProductCommand): Promise<OrderResult> {
     const memberId = command.memberId;
     const products: Product[] = command.products;
 
-    return {
-      id: 1,
-      memberId: memberId,
-      couponId: NaN,
-      totalSales: 2424900,
-      discountedSales: 2424900,
-      status: OrderStatus.PAYMENT_PREPARING,
+    let totalSales = 0;
+    for (const product of products) {
+      totalSales += product.price;
+    }
+
+    const order = await this.orderRepository.createOrder(memberId, totalSales, OrderStatus.PAYMENT_PREPARING);
+
+    for (const product of products) {
+      await this.orderProductRepository.createOrderProduct(order.id, product.id, product.amount);
+    }
+
+    const result: OrderResult = {
+      id: order.id,
+      memberId: order.memberId,
+      totalSales: order.totalSales,
+      status: getEnumFromValue(OrderStatus, order.status),
     };
+    return result;
   }
 
   async cancelOrder(command: CancelOrderCommand): Promise<OrderResult> {
     const orderId = command.orderId;
 
-    return {
-      id: 1,
-      memberId: 1,
-      couponId: NaN,
-      totalSales: 2424900,
-      discountedSales: 2424900,
-      status: OrderStatus.ORDER_CANCEL,
+    const order = await this.orderRepository.findById(orderId);
+    if (order === null) {
+      throw new Error("ORDER_NOT_FOUND");
+    }
+
+    const canceledOrder = await this.orderRepository.cancelOrder(orderId);
+
+    const result: OrderResult = {
+      id: canceledOrder.id,
+      memberId: canceledOrder.memberId,
+      totalSales: canceledOrder.totalSales,
+      status: getEnumFromValue(OrderStatus, canceledOrder.status),
     };
+
+    return result;
   }
 
-  async payOrder(command: PayOrderCommand): Promise<OrderResult> {
+  async getOrder(command: GetOrderCommand) {
     const orderId = command.orderId;
-    const couponId = command.couponId;
 
-    return {
-      id: 1,
-      memberId: 1,
-      couponId: couponId,
-      totalSales: 2424900,
-      discountedSales: 1212450,
-      status: OrderStatus.PAYMENT_COMPLETED,
-    };
+    return await this.orderRepository.getOrder(orderId);
   }
 }
