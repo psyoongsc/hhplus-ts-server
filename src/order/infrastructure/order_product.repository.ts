@@ -3,7 +3,7 @@ import { PrismaRepository } from "@app/database/prismaRepository.impl";
 import { IRepository } from "@app/database/repository.interface";
 import { Injectable } from "@nestjs/common";
 import { Order_Product } from "@prisma/client";
-import { IOrderProductRepository } from "../repository/order_product.repository.interface";
+import { IOrderProductRepository } from "../domain/repository/order_product.repository.interface";
 
 @Injectable()
 export class OrderProductRepository extends PrismaRepository<Order_Product> implements IOrderProductRepository {

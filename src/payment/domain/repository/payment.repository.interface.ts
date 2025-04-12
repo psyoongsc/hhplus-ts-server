@@ -1,6 +1,6 @@
 import { IRepository } from "@app/database/repository.interface";
 import { Payment } from "@prisma/client";
-import { PaymentStatus } from "../domain/dto/payment-status.enum";
+import { PaymentStatus } from "../../domain/dto/payment-status.enum";
 
 export interface IPaymentRepository extends IRepository<Payment> {
   createPayment(

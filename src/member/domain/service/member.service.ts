@@ -3,11 +3,11 @@ import { BalanceResult } from "../dto/balance.result.dto";
 import { GetBalanceCommand } from "../dto/get-balance.command.dto";
 import { ChargeBalanceCommand } from "../dto/charge-balance.command.dto";
 import { UseBalanceCommand } from "../dto/use-balance.command.dto";
-import { MemberRepository } from "../../infrastructure/memeber.repository";
+import { MemberRepository } from "../../infrastructure/member.repository";
 import { Member } from "../entity/member.entity";
 import { BalanceHisotryRepository } from "../../infrastructure/balanceHistory.repository";
-import { IMEMBER_REPOSITORY } from "../../repository/member.repository.interface";
-import { IBALANCE_HISTORY_REPOSITORY } from "../../repository/balanceHistory.repository.interface";
+import { IMEMBER_REPOSITORY } from "../repository/member.repository.interface";
+import { IBALANCE_HISTORY_REPOSITORY } from "../repository/balanceHistory.repository.interface";
 
 @Injectable()
 export class MemberService {

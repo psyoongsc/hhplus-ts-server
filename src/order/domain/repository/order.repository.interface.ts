@@ -1,6 +1,6 @@
 import { IRepository } from "@app/database/repository.interface";
 import { Order } from "@prisma/client";
-import { OrderStatus } from "../domain/dto/order-status.enum";
+import { OrderStatus } from "../dto/order-status.enum";
 
 export interface IOrderRepository extends IRepository<Order> {
   createOrder(memberId: number, totalSales: number, status: OrderStatus): Promise<Order>;

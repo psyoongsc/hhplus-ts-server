@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { OrderService } from "./order.service";
-import { IORDER_REPOSITORY } from "../../repository/order.repository.interface";
-import { IORDER_PRODUCT_REPOSITORY } from "../../repository/order_product.repository.interface";
+import { IORDER_REPOSITORY } from "../repository/order.repository.interface";
+import { IORDER_PRODUCT_REPOSITORY } from "../repository/order_product.repository.interface";
 import { OrderProductCommand } from "../dto/order-product.command.dto";
 import { CancelOrderCommand } from "../dto/cancel-order.command.dto";
 import { OrderStatus } from "../dto/order-status.enum";

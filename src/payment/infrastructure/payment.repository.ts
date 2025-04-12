@@ -2,7 +2,7 @@ import { PrismaService } from "@app/database/prisma/prisma.service";
 import { PrismaRepository } from "@app/database/prismaRepository.impl";
 import { Injectable } from "@nestjs/common";
 import { Payment } from "@prisma/client";
-import { IPaymentRepository } from "../repository/payment.repository.interface";
+import { IPaymentRepository } from "../domain/repository/payment.repository.interface";
 import { PaymentStatus } from "../domain/dto/payment-status.enum";
 
 @Injectable()

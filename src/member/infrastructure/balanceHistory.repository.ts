@@ -1,7 +1,7 @@
 import { PrismaRepository } from "@app/database/prismaRepository.impl";
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "@app/database/prisma/prisma.service";
-import { IBalanceRepository } from "../repository/balanceHistory.repository.interface";
+import { IBalanceRepository } from "../domain/repository/balanceHistory.repository.interface";
 import { Balance_History } from "@prisma/client";
 
 @Injectable()

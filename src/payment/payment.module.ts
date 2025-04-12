@@ -3,12 +3,12 @@ import { Module } from "@nestjs/common";
 import { PaymentController } from "./presentation/payment.controller";
 import { PaymentService } from "./domain/service/payment.service";
 import { PaymentRepository } from "./infrastructure/payment.repository";
-import { IPAYMENT_REPOSITORY } from "./repository/payment.repository.interface";
+import { IPAYMENT_REPOSITORY } from "./domain/repository/payment.repository.interface";
 import { MemberModule } from "@app/member/member.module";
 import { OrderModule } from "@app/order/order.module";
 import { ProductModule } from "@app/product/product.module";
 import { ProductSalesStatModule } from "@app/productSalesStat/productSalesStat.module";
-import { PaymentFacade } from "./domain/application/payment.facade";
+import { PaymentFacade } from "./application/payment.facade";
 
 @Module({
   imports: [PrismaModule, MemberModule, OrderModule, ProductModule, ProductSalesStatModule],

@@ -4,7 +4,7 @@ import { AddProductSalesStatResult } from "../dto/add-product-sales-stat.result.
 import { Product_Sales_Stat } from "@prisma/client";
 import { ProductSalesStatRepository } from "../../infrastructure/product_sales_stat.repository";
 import { AddProductSalesStatCommand, PaidProduct } from "../dto/add-product-sales-stat.command.dto";
-import { IPRODUCT_SALES_STAT_REPOSITORY } from "../../repository/product_sales_stat.interface.repository";
+import { IPRODUCT_SALES_STAT_REPOSITORY } from "../repository/product_sales_stat.interface.repository";
 
 @Injectable()
 export class ProductSalesStatService {

@@ -1,7 +1,7 @@
 import { PrismaRepository } from "@app/database/prismaRepository.impl";
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "@app/database/prisma/prisma.service";
-import { IMemberRepository } from "../repository/member.repository.interface";
+import { IMemberRepository } from "../domain/repository/member.repository.interface";
 import { Member } from "@prisma/client";
 
 @Injectable()

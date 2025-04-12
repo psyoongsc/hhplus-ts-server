@@ -1,11 +1,11 @@
 import { Module } from "@nestjs/common";
 import { MemberService } from "./domain/service/member.service";
 import { MemberController } from "./presentation/member.controller";
-import { MemberRepository } from "./infrastructure/memeber.repository";
+import { MemberRepository } from "./infrastructure/member.repository";
 import { PrismaModule } from "@app/database/prisma/prisma.module";
 import { BalanceHisotryRepository } from "./infrastructure/balanceHistory.repository";
-import { IMEMBER_REPOSITORY } from "./repository/member.repository.interface";
-import { IBALANCE_HISTORY_REPOSITORY } from "./repository/balanceHistory.repository.interface";
+import { IMEMBER_REPOSITORY } from "./domain/repository/member.repository.interface";
+import { IBALANCE_HISTORY_REPOSITORY } from "./domain/repository/balanceHistory.repository.interface";
 
 @Module({
   imports: [PrismaModule],

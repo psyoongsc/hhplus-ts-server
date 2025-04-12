@@ -6,7 +6,7 @@ import { ProductResult } from "../dto/product.result.dto";
 import { GetProductCommand } from "../dto/get-product.command.dto";
 import { AddStockCommand } from "../dto/add-stock.command.dto";
 import { DeductStockCommand } from "../dto/deduct-stock.command.dto";
-import { IPRODUCT_REPOSITORY } from "../../repository/product.repository.interface";
+import { IPRODUCT_REPOSITORY } from "../repository/product.repository.interface";
 
 describe("ProductService", () => {
   let productService: ProductService;

@@ -5,7 +5,7 @@ import { AddStockCommand } from "../dto/add-stock.command.dto";
 import { DeductStockCommand } from "../dto/deduct-stock.command.dto";
 import { ProductRepository } from "../../infrastructure/product.repository";
 import { Product } from "@prisma/client";
-import { IPRODUCT_REPOSITORY } from "../../repository/product.repository.interface";
+import { IPRODUCT_REPOSITORY } from "../repository/product.repository.interface";
 
 @Injectable()
 export class ProductService {

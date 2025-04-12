@@ -1,7 +1,7 @@
 import { PrismaRepository } from "@app/database/prismaRepository.impl";
 import { PrismaService } from "@app/database/prisma/prisma.service";
 import { Injectable } from "@nestjs/common";
-import { IProductSalesStatRepository } from "../repository/product_sales_stat.interface.repository";
+import { IProductSalesStatRepository } from "../domain/repository/product_sales_stat.interface.repository";
 import { Product_Sales_Stat } from "@prisma/client";
 
 @Injectable()

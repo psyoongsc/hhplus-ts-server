@@ -4,14 +4,14 @@ import { MemberService } from "@app/member/domain/service/member.service";
 import { OrderService } from "@app/order/domain/service/order.service";
 import { ProductService } from "@app/product/domain/service/product.service";
 import { ProductSalesStatService } from "@app/productSalesStat/domain/service/productSalesStat.service";
-import { PaymentService } from "../service/payment.service";
-import { ProcessPaymentCommand } from "../dto/process-payment.command.dto";
+import { PaymentService } from "../domain/service/payment.service";
+import { ProcessPaymentCommand } from "../domain/dto/process-payment.command.dto";
 import { Payment } from "@prisma/client";
 import { GetOrderCommand } from "@app/order/domain/dto/get-order.command.dto";
 import { DeductStockCommand } from "@app/product/domain/dto/deduct-stock.command.dto";
 import { AddStockCommand } from "@app/product/domain/dto/add-stock.command.dto";
 import { UseBalanceCommand } from "@app/member/domain/dto/use-balance.command.dto";
-import { PaymentResult } from "../dto/payment.result.dto";
+import { PaymentResult } from "../domain/dto/payment.result.dto";
 import { ChargeBalanceCommand } from "@app/member/domain/dto/charge-balance.command.dto";
 import {
   AddProductSalesStatCommand,

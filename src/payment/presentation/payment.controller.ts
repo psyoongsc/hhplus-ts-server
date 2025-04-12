@@ -3,8 +3,8 @@ import { PaymentService } from "../domain/service/payment.service";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { ProcessPaymentReqDto } from "./dto/process-payment.req.dto";
 import { ProcessPaymentResDto } from "./dto/process-payment.res.dto";
-import { ProcessPaymentFacadeReqDto } from "../domain/application/dto/process-payment.facade.req.dto";
-import { PaymentFacade } from "../domain/application/payment.facade";
+import { ProcessPaymentFacadeReqDto } from "../application/dto/process-payment.facade.req.dto";
+import { PaymentFacade } from "../application/payment.facade";
 
 @ApiTags("Payment Management")
 @Controller("payment")

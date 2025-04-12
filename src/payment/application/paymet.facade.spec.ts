@@ -4,9 +4,9 @@ import { OrderService } from "@app/order/domain/service/order.service";
 import { ProductService } from "@app/product/domain/service/product.service";
 import { MemberService } from "@app/member/domain/service/member.service";
 import { ProductSalesStatService } from "@app/productSalesStat/domain/service/productSalesStat.service";
-import { PaymentService } from "../service/payment.service";
+import { PaymentService } from "../domain/service/payment.service";
 import { ProcessPaymentFacadeReqDto } from "./dto/process-payment.facade.req.dto";
-import { PaymentResult } from "../dto/payment.result.dto";
+import { PaymentResult } from "../domain/dto/payment.result.dto";
 import { OrderStatus } from "@app/order/domain/dto/order-status.enum";
 
 describe("PaymentFacade", () => {

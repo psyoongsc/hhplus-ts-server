@@ -1,6 +1,6 @@
 import { PrismaRepository } from "@app/database/prismaRepository.impl";
 import { Member_Coupon } from "@prisma/client";
-import { IMemberCouponRepository } from "../repository/member_coupon.repository.interface";
+import { IMemberCouponRepository } from "../domain/repository/member_coupon.repository.interface";
 import { PrismaService } from "@app/database/prisma/prisma.service";
 
 export class MemberCouponRepository extends PrismaRepository<Member_Coupon> implements IMemberCouponRepository {

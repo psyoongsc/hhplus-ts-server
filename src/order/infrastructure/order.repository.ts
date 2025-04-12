@@ -3,7 +3,7 @@ import { PrismaRepository } from "@app/database/prismaRepository.impl";
 import { Injectable } from "@nestjs/common";
 import { Order } from "@prisma/client";
 import { OrderStatus } from "../domain/dto/order-status.enum";
-import { IOrderRepository } from "../repository/order.repository.interface";
+import { IOrderRepository } from "../domain/repository/order.repository.interface";
 
 @Injectable()
 export class OrderRepository extends PrismaRepository<Order> implements IOrderRepository {

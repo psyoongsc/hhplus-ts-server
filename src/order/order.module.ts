@@ -4,8 +4,8 @@ import { OrderController } from "./presentation/order.controller";
 import { PrismaModule } from "@app/database/prisma/prisma.module";
 import { OrderRepository } from "./infrastructure/order.repository";
 import { OrderProductRepository } from "./infrastructure/order_product.repository";
-import { IORDER_REPOSITORY } from "./repository/order.repository.interface";
-import { IORDER_PRODUCT_REPOSITORY } from "./repository/order_product.repository.interface";
+import { IORDER_REPOSITORY } from "./domain/repository/order.repository.interface";
+import { IORDER_PRODUCT_REPOSITORY } from "./domain/repository/order_product.repository.interface";
 
 @Module({
   imports: [PrismaModule],
