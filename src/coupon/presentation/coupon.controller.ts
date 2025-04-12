@@ -3,11 +3,11 @@ import { CouponService } from "../domain/service/coupon.service";
 import { GetAllCouponsResDto } from "./dto/get-all-coupons.res.dto";
 import { IssueCouponReqDto } from "./dto/issue-coupon.req.dto";
 import { IssueCouponResDto } from "./dto/issue-coupon.res.dto";
-import { IssueCouponCommand } from "../domain/dto/issue-coupon.command";
+import { IssueCouponCommand } from "../domain/dto/issue-coupon.command.dto";
 import { UseCouponReqDto } from "./dto/use-coupon.req.dto";
 import { UseCouponResDto } from "./dto/use-coupon.res.dto";
-import { UseCouponCommand } from "../domain/dto/use-coupon.command";
-import { GetCouponsByMemberCommand } from "../domain/dto/get-coupons-by-member.command";
+import { UseCouponCommand } from "../domain/dto/use-coupon.command.dto";
+import { GetCouponsByMemberCommand } from "../domain/dto/get-coupons-by-member.command.dto";
 import { GetCouponByMemberResDto } from "./dto/get-coupons-by-member.res.dto";
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from "@nestjs/swagger";
 

@@ -1,14 +1,14 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { OrderProductCommand, Product } from "../dto/order-product.command";
-import { OrderResult } from "../dto/order.result";
+import { OrderProductCommand, Product } from "../dto/order-product.command.dto";
+import { OrderResult } from "../dto/order.result.dto";
 import { OrderStatus } from "../dto/order-status.enum";
-import { CancelOrderCommand } from "../dto/cancel-order.command";
+import { CancelOrderCommand } from "../dto/cancel-order.command.dto";
 import { OrderRepository } from "../../infrastructure/order.repository";
 import { OrderProductRepository } from "../../infrastructure/order_product.repository";
 import { getEnumFromValue } from "@app/common/enum.common";
-import { GetOrderCommand } from "../dto/get-order.command";
 import { IORDER_REPOSITORY } from "../../repository/order.repository.interface";
 import { IORDER_PRODUCT_REPOSITORY } from "../../repository/order_product.repository.interface";
+import { GetOrderCommand } from "../dto/get-order.command.dto";
 
 // TODO - 단위 테스트 작성 해야함
 @Injectable()

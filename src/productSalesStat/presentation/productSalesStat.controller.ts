@@ -3,7 +3,7 @@ import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { ProductSalesStatService } from "../domain/service/productSalesStat.service";
 import { GetPopularProductsResDto } from "./dto/get-popular-products.res.dto";
 import { AddProductSalesStatReqDto } from "./dto/add-product-sales-stat.req.dto";
-import { AddProductSalesStatCommand } from "../domain/dto/add-product-sales-stat.command";
+import { AddProductSalesStatCommand } from "../domain/dto/add-product-sales-stat.command.dto";
 import { AddProductSalesStatResDto } from "./dto/add-product-sales-stat-res.dto";
 
 @ApiTags("Product Sales Stat Management")

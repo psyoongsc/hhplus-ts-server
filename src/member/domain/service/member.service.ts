@@ -1,8 +1,8 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { BalanceResult } from "../dto/balance.result";
-import { GetBalanceCommand } from "../dto/get-balance.command";
-import { ChargeBalanceCommand } from "../dto/charge-balance.command";
-import { UseBalanceCommand } from "../dto/use-balance.command";
+import { BalanceResult } from "../dto/balance.result.dto";
+import { GetBalanceCommand } from "../dto/get-balance.command.dto";
+import { ChargeBalanceCommand } from "../dto/charge-balance.command.dto";
+import { UseBalanceCommand } from "../dto/use-balance.command.dto";
 import { MemberRepository } from "../../infrastructure/memeber.repository";
 import { Member } from "../entity/member.entity";
 import { BalanceHisotryRepository } from "../../infrastructure/balanceHistory.repository";

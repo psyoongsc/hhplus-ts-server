@@ -3,10 +3,10 @@ import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { OrderService } from "../domain/service/order.service";
 import { OrderProductReqDto } from "./dto/order-product.req.dto";
 import { OrderProductResDto } from "./dto/order-product.res.dto";
-import { OrderProductCommand } from "../domain/dto/order-product.command";
+import { OrderProductCommand } from "../domain/dto/order-product.command.dto";
 import { CancelOrderReqDto } from "./dto/cancel-order.req.dto";
 import { CancelOrderResDto } from "./dto/cancel-order.res.dto";
-import { CancelOrderCommand } from "../domain/dto/cancel-order.command";
+import { CancelOrderCommand } from "../domain/dto/cancel-order.command.dto";
 @ApiTags("Order Management")
 @Controller("order")
 export class OrderController {

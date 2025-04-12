@@ -1,11 +1,11 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { OrderService } from "./order.service";
-import { OrderProductCommand } from "../dto/order-product.command";
-import { CancelOrderCommand } from "../dto/cancel-order.command";
 import { IORDER_REPOSITORY } from "../../repository/order.repository.interface";
 import { IORDER_PRODUCT_REPOSITORY } from "../../repository/order_product.repository.interface";
+import { OrderProductCommand } from "../dto/order-product.command.dto";
+import { CancelOrderCommand } from "../dto/cancel-order.command.dto";
 import { OrderStatus } from "../dto/order-status.enum";
-import { GetOrderCommand } from "../dto/get-order.command";
+import { GetOrderCommand } from "../dto/get-order.command.dto";
 
 jest.mock("@app/common/enum.common", () => ({
   getEnumFromValue: (_enum: any, value: string) => value,

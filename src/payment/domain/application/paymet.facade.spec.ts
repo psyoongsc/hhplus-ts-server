@@ -6,7 +6,7 @@ import { MemberService } from "@app/member/domain/service/member.service";
 import { ProductSalesStatService } from "@app/productSalesStat/domain/service/productSalesStat.service";
 import { PaymentService } from "../service/payment.service";
 import { ProcessPaymentFacadeReqDto } from "./dto/process-payment.facade.req.dto";
-import { PaymentResult } from "../dto/payment.result";
+import { PaymentResult } from "../dto/payment.result.dto";
 import { OrderStatus } from "@app/order/domain/dto/order-status.enum";
 
 describe("PaymentFacade", () => {

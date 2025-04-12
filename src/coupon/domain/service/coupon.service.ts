@@ -1,15 +1,15 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { IssueCouponCommand } from "../dto/issue-coupon.command";
-import { UseCouponCommand } from "../dto/use-coupon.command";
-import { GetCouponsByMemberCommand } from "../dto/get-coupons-by-member.command";
-import { CouponResult } from "../dto/coupon.result";
-import { MemberCouponResult } from "../dto/member_coupon.result";
-import { AddCouponCommand } from "../dto/add-coupon.command";
-import { DeductCouponCommand } from "../dto/deduct-coupon.command";
+import { IssueCouponCommand } from "../dto/issue-coupon.command.dto";
+import { UseCouponCommand } from "../dto/use-coupon.command.dto";
+import { GetCouponsByMemberCommand } from "../dto/get-coupons-by-member.command.dto";
+import { CouponResult } from "../dto/coupon.result.dto";
+import { MemberCouponResult } from "../dto/member_coupon.result.dto";
 import { CouponRepository } from "../../infrastructure/coupon.repository";
 import { MemberCouponRepository } from "../../infrastructure/member_coupon.repository";
 import { ICOUPON_REPOSITORY } from "../../repository/coupon.repository.interface";
 import { IMEMBER_COUPON_REPOSITORY } from "../../repository/member_coupon.repository.interface";
+import { AddCouponCommand } from "../dto/add-coupon.command.dto";
+import { DeductCouponCommand } from "../dto/deduct-coupon.command.dto";
 
 @Injectable()
 export class CouponService {

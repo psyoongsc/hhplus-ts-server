@@ -2,10 +2,10 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { ProductRepository } from "../../infrastructure/product.repository";
 import { ProductService } from "./product.service";
 import { Product } from "../entity/product.entity";
-import { ProductResult } from "../dto/product.result";
-import { GetProductCommand } from "../dto/get-product.command";
-import { AddStockCommand } from "../dto/add-stock.command";
-import { DeductStockCommand } from "../dto/deduct-stock.command";
+import { ProductResult } from "../dto/product.result.dto";
+import { GetProductCommand } from "../dto/get-product.command.dto";
+import { AddStockCommand } from "../dto/add-stock.command.dto";
+import { DeductStockCommand } from "../dto/deduct-stock.command.dto";
 import { IPRODUCT_REPOSITORY } from "../../repository/product.repository.interface";
 
 describe("ProductService", () => {

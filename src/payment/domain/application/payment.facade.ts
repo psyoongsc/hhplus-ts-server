@@ -5,18 +5,18 @@ import { OrderService } from "@app/order/domain/service/order.service";
 import { ProductService } from "@app/product/domain/service/product.service";
 import { ProductSalesStatService } from "@app/productSalesStat/domain/service/productSalesStat.service";
 import { PaymentService } from "../service/payment.service";
-import { ProcessPaymentCommand } from "../dto/process-payment.command";
+import { ProcessPaymentCommand } from "../dto/process-payment.command.dto";
 import { Payment } from "@prisma/client";
-import { GetOrderCommand } from "@app/order/domain/dto/get-order.command";
-import { DeductStockCommand } from "@app/product/domain/dto/deduct-stock.command";
-import { AddStockCommand } from "@app/product/domain/dto/add-stock.command";
-import { UseBalanceCommand } from "@app/member/domain/dto/use-balance.command";
-import { PaymentResult } from "../dto/payment.result";
-import { ChargeBalanceCommand } from "@app/member/domain/dto/charge-balance.command";
+import { GetOrderCommand } from "@app/order/domain/dto/get-order.command.dto";
+import { DeductStockCommand } from "@app/product/domain/dto/deduct-stock.command.dto";
+import { AddStockCommand } from "@app/product/domain/dto/add-stock.command.dto";
+import { UseBalanceCommand } from "@app/member/domain/dto/use-balance.command.dto";
+import { PaymentResult } from "../dto/payment.result.dto";
+import { ChargeBalanceCommand } from "@app/member/domain/dto/charge-balance.command.dto";
 import {
   AddProductSalesStatCommand,
   PaidProduct,
-} from "@app/productSalesStat/domain/dto/add-product-sales-stat.command";
+} from "@app/productSalesStat/domain/dto/add-product-sales-stat.command.dto";
 
 @Injectable()
 export class PaymentFacade {

@@ -15,9 +15,9 @@ import { ChargeBalanceControllerResDto } from "./dto/charge-balance.res.dto";
 import { UseBalanceControllerReqDto } from "./dto/use-balance.req.dto";
 import { UseBalanceControllerResDto } from "./dto/use-balance.res.dto";
 import { GetBalanceControllerResDto } from "./dto/get-balance.res.dto";
-import { ChargeBalanceCommand } from "../domain/dto/charge-balance.command";
-import { UseBalanceCommand } from "../domain/dto/use-balance.command";
-import { GetBalanceCommand } from "../domain/dto/get-balance.command";
+import { ChargeBalanceCommand } from "../domain/dto/charge-balance.command.dto";
+import { UseBalanceCommand } from "../domain/dto/use-balance.command.dto";
+import { GetBalanceCommand } from "../domain/dto/get-balance.command.dto";
 
 @ApiTags("Member Management")
 @Controller("member")
