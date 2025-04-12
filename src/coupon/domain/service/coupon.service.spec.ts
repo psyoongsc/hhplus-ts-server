@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CouponService } from './coupon.service';
-import { ICOUPON_REPOSITORY } from '../coupon.repository.interface';
-import { IMEMBER_COUPON_REPOSITORY } from '../member_coupon.repository.interface';
+import { ICOUPON_REPOSITORY } from '../../repository/coupon.repository.interface';
+import { IMEMBER_COUPON_REPOSITORY } from '../../repository/member_coupon.repository.interface';
 
 describe('CouponService', () => {
   let service: CouponService;

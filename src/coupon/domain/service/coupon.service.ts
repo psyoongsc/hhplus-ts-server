@@ -4,12 +4,12 @@ import { UseCouponCommand } from "../dto/use-coupon.command";
 import { GetCouponsByMemberCommand } from "../dto/get-coupons-by-member.command";
 import { CouponResult } from "../dto/coupon.result";
 import { MemberCouponResult } from "../dto/member_coupon.result";
-import { CouponRepository } from "../infrastructure/coupon.repository";
-import { MemberCouponRepository } from "../infrastructure/member_coupon.repository";
-import { ICOUPON_REPOSITORY } from "../coupon.repository.interface";
-import { IMEMBER_COUPON_REPOSITORY } from "../member_coupon.repository.interface";
 import { AddCouponCommand } from "../dto/add-coupon.command";
 import { DeductCouponCommand } from "../dto/deduct-coupon.command";
+import { CouponRepository } from "../../infrastructure/coupon.repository";
+import { MemberCouponRepository } from "../../infrastructure/member_coupon.repository";
+import { ICOUPON_REPOSITORY } from "../../repository/coupon.repository.interface";
+import { IMEMBER_COUPON_REPOSITORY } from "../../repository/member_coupon.repository.interface";
 
 @Injectable()
 export class CouponService {

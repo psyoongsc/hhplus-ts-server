@@ -3,12 +3,12 @@ import { OrderProductCommand, Product } from "../dto/order-product.command";
 import { OrderResult } from "../dto/order.result";
 import { OrderStatus } from "../dto/order-status.enum";
 import { CancelOrderCommand } from "../dto/cancel-order.command";
-import { OrderRepository } from "../infrastructure/order.repository";
-import { OrderProductRepository } from "../infrastructure/order_product.repository";
+import { OrderRepository } from "../../infrastructure/order.repository";
+import { OrderProductRepository } from "../../infrastructure/order_product.repository";
 import { getEnumFromValue } from "@app/common/enum.common";
-import { IORDER_REPOSITORY } from "../order.repository.interface";
-import { IORDER_PRODUCT_REPOSITORY } from "../order_product.repository.interface";
 import { GetOrderCommand } from "../dto/get-order.command";
+import { IORDER_REPOSITORY } from "../../repository/order.repository.interface";
+import { IORDER_PRODUCT_REPOSITORY } from "../../repository/order_product.repository.interface";
 
 // TODO - 단위 테스트 작성 해야함
 @Injectable()

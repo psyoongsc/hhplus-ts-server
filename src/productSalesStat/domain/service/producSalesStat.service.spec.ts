@@ -1,8 +1,8 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { ProductSalesStatRepository } from "../infrastructure/product_sales_stat.repository";
+import { ProductSalesStatRepository } from "../../infrastructure/product_sales_stat.repository";
 import { ProductSalesStatService } from "./productSalesStat.service";
 import { AddProductSalesStatCommand, PaidProduct } from "../dto/add-product-sales-stat.command";
-import { IPRODUCT_SALES_STAT_REPOSITORY } from "../product_sales_stat.interface.repository";
+import { IPRODUCT_SALES_STAT_REPOSITORY } from "../../repository/product_sales_stat.interface.repository";
 
 describe("ProductSalesStatService", () => {
   let productSalesStatService: ProductSalesStatService;

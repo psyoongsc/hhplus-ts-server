@@ -1,6 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { PaymentService } from "./payment.service";
-import { IPAYMENT_REPOSITORY } from "../payment.repository.interface";
+import { IPAYMENT_REPOSITORY } from "../../repository/payment.repository.interface";
 import { PaymentStatus } from "../dto/payment-status.enum";
 import { ProcessPaymentCommand } from "../dto/process-payment.command";
 import { PaymentResult } from "../dto/payment.result";

@@ -2,9 +2,8 @@ import { PrismaService } from "@app/database/prisma/prisma.service";
 import { PrismaRepository } from "@app/database/prismaRepository.impl";
 import { Injectable } from "@nestjs/common";
 import { Order } from "@prisma/client";
-import { OrderStatus } from "../dto/order-status.enum";
-import { connect } from "http2";
-import { IOrderRepository } from "../order.repository.interface";
+import { OrderStatus } from "../domain/dto/order-status.enum";
+import { IOrderRepository } from "../repository/order.repository.interface";
 
 @Injectable()
 export class OrderRepository extends PrismaRepository<Order> implements IOrderRepository {

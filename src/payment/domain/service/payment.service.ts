@@ -1,8 +1,8 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { PaymentRepository } from "../infrastructure/payment.repository";
 import { ProcessPaymentCommand } from "../dto/process-payment.command";
 import { PaymentResult } from "../dto/payment.result";
-import { IPAYMENT_REPOSITORY } from "../payment.repository.interface";
+import { PaymentRepository } from "../../infrastructure/payment.repository";
+import { IPAYMENT_REPOSITORY } from "../../repository/payment.repository.interface";
 import { PaymentStatus } from "../dto/payment-status.enum";
 
 @Injectable()

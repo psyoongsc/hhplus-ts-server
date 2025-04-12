@@ -1,8 +1,8 @@
 import { PrismaService } from "@app/database/prisma/prisma.service";
 import { PrismaRepository } from "@app/database/prismaRepository.impl";
-import { Product } from "../entity/product.entity";
 import { Injectable } from "@nestjs/common";
-import { IProductRepository } from "../product.repository.interface";
+import { IProductRepository } from "../repository/product.repository.interface";
+import { Product } from "@prisma/client";
 
 @Injectable()
 export class ProductRepository extends PrismaRepository<Product> implements IProductRepository {

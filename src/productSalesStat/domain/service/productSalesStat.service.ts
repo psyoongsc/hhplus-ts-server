@@ -2,9 +2,9 @@ import { Inject, Injectable } from "@nestjs/common";
 import { ProductSalesStatResult } from "../dto/product-sales-stat.result";
 import { AddProductSalesStatResult } from "../dto/add-product-sales-stat.result";
 import { Product_Sales_Stat } from "@prisma/client";
-import { ProductSalesStatRepository } from "../infrastructure/product_sales_stat.repository";
 import { AddProductSalesStatCommand, PaidProduct } from "../dto/add-product-sales-stat.command";
-import { IPRODUCT_SALES_STAT_REPOSITORY } from "../product_sales_stat.interface.repository";
+import { ProductSalesStatRepository } from "../../infrastructure/product_sales_stat.repository";
+import { IPRODUCT_SALES_STAT_REPOSITORY } from "../../repository/product_sales_stat.interface.repository";
 
 @Injectable()
 export class ProductSalesStatService {

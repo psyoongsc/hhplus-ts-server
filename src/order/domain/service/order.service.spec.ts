@@ -1,9 +1,9 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { OrderService } from "./order.service";
-import { IORDER_REPOSITORY } from "../order.repository.interface";
-import { IORDER_PRODUCT_REPOSITORY } from "../order_product.repository.interface";
 import { OrderProductCommand } from "../dto/order-product.command";
 import { CancelOrderCommand } from "../dto/cancel-order.command";
+import { IORDER_REPOSITORY } from "../../repository/order.repository.interface";
+import { IORDER_PRODUCT_REPOSITORY } from "../../repository/order_product.repository.interface";
 import { OrderStatus } from "../dto/order-status.enum";
 import { GetOrderCommand } from "../dto/get-order.command";
 
