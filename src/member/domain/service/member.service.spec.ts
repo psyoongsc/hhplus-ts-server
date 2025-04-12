@@ -82,7 +82,7 @@ describe("MemberService", () => {
     });
   });
 
-  describe("charge", () => {
+  describe("chargeBalance", () => {
     it("1000원이 충전되어 있는 사용자가 2000원을 충전하면 3000원이 있어야 함✅", async () => {
       // mock & stub settings
       const mockFindMember: Member = { id: 1, name: "psy", balance: 1000 };
@@ -94,7 +94,7 @@ describe("MemberService", () => {
       const chargeBalanceCommand: ChargeBalanceCommand = { memberId: 1, amount: 2000 };
 
       // real service calls
-      const result: BalanceResult = await memberService.charge(chargeBalanceCommand);
+      const result: BalanceResult = await memberService.chargeBalance(chargeBalanceCommand);
 
       // expectactions
       expect(result.balance).toBe(3000);
@@ -115,7 +115,7 @@ describe("MemberService", () => {
       const chargeBalanceCommand: ChargeBalanceCommand = { memberId: 1, amount: 2000 };
 
       // real service calls & expectactions
-      await expect(memberService.charge(chargeBalanceCommand)).rejects.toThrow("MEMBER_NOT_FOUND");
+      await expect(memberService.chargeBalance(chargeBalanceCommand)).rejects.toThrow("MEMBER_NOT_FOUND");
       expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
       expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1);
       expect(memberRepositoryStub.updateBalance).not.toHaveBeenCalled();
@@ -131,7 +131,7 @@ describe("MemberService", () => {
       const chargeBalanceCommand: ChargeBalanceCommand = { memberId: 1, amount: 2_147_482_648 };
 
       // real service calls & expectations
-      await expect(memberService.charge(chargeBalanceCommand)).rejects.toThrow("OVER_BALANCE_LIMIT");
+      await expect(memberService.chargeBalance(chargeBalanceCommand)).rejects.toThrow("OVER_BALANCE_LIMIT");
       expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
       expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1);
       expect(memberRepositoryStub.updateBalance).not.toHaveBeenCalled();
@@ -139,7 +139,7 @@ describe("MemberService", () => {
     });
   });
 
-  describe("use", () => {
+  describe("useBalance", () => {
     it("10000원이 충전되어 있는 사용자가 4000원을 사용하면 6000원이 있어야 함✅", async () => {
       // mock & stub settings
       const mockFindMember: Member = { id: 1, name: "psy", balance: 10000 };
@@ -151,7 +151,7 @@ describe("MemberService", () => {
       const useBalanceCommand: UseBalanceCommand = { memberId: 1, amount: 4000 };
 
       // real service calls
-      const result: BalanceResult = await memberService.use(useBalanceCommand);
+      const result: BalanceResult = await memberService.useBalance(useBalanceCommand);
 
       // expectactions
       expect(result.balance).toBe(6000);
@@ -172,7 +172,7 @@ describe("MemberService", () => {
       const useBalanceCommand: UseBalanceCommand = { memberId: 1, amount: 4000 };
 
       // real service calls & expectactions
-      await expect(memberService.use(useBalanceCommand)).rejects.toThrow("MEMBER_NOT_FOUND");
+      await expect(memberService.useBalance(useBalanceCommand)).rejects.toThrow("MEMBER_NOT_FOUND");
       expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
       expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1);
       expect(memberRepositoryStub.updateBalance).not.toHaveBeenCalled();
@@ -188,7 +188,7 @@ describe("MemberService", () => {
       const useBalanceCommand: UseBalanceCommand = { memberId: 1, amount: 4000 };
 
       // real service calls & expectations
-      await expect(memberService.use(useBalanceCommand)).rejects.toThrow("NOT_ENOUTH_BALANCE");
+      await expect(memberService.useBalance(useBalanceCommand)).rejects.toThrow("NOT_ENOUTH_BALANCE");
       expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
       expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1);
       expect(memberRepositoryStub.updateBalance).not.toHaveBeenCalled();

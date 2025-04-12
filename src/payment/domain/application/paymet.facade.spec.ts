@@ -20,12 +20,12 @@ describe("PaymentFacade", () => {
   beforeEach(async () => {
     orderService = { getOrder: jest.fn() };
     productService = {
-      deductStock: jest.fn(),
-      addStock: jest.fn(),
+      deductProductStock: jest.fn(),
+      addProductStock: jest.fn(),
     };
     memberService = {
-      use: jest.fn(),
-      charge: jest.fn(),
+      useBalance: jest.fn(),
+      chargeBalance: jest.fn(),
     };
     paymentService = {
       processPayment: jest.fn(),
@@ -91,12 +91,12 @@ describe("PaymentFacade", () => {
       // Assert - 모든 서비스가 제대로 호출되었는지 검증
       expect(orderService.getOrder).toHaveBeenCalledWith({ orderId: 1 });
 
-      expect(productService.deductStock).toHaveBeenCalledWith({
+      expect(productService.deductProductStock).toHaveBeenCalledWith({
         productId: 101,
         amount: 2,
       });
 
-      expect(memberService.use).toHaveBeenCalledWith({
+      expect(memberService.useBalance).toHaveBeenCalledWith({
         memberId: 10,
         amount: 10000,
       });

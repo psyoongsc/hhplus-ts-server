@@ -24,7 +24,7 @@ export class CouponService {
     return await this.couponRepository.getAllAvailableCoupons();
   }
 
-  async issue(command: IssueCouponCommand): Promise<MemberCouponResult> {
+  async issueCoupon(command: IssueCouponCommand): Promise<MemberCouponResult> {
     const memberId = command.memberId;
     const couponId = command.couponId;
 
@@ -33,11 +33,11 @@ export class CouponService {
       throw new Error("ALREADY_HAVING_COUPON");
     }
 
-    await this.deduct({couponId});
+    await this.deductCouponStock({couponId});
     return await this.memberCouponRepository.issueCoupon(memberId, couponId);
   }
 
-  async use(command: UseCouponCommand): Promise<MemberCouponResult> {
+  async useCoupon(command: UseCouponCommand): Promise<MemberCouponResult> {
     const memberId = command.memberId;
     const couponId = command.couponId;
 
@@ -52,7 +52,7 @@ export class CouponService {
     return await this.memberCouponRepository.useCoupon(memberId, couponId);
   }
 
-  async add(command: AddCouponCommand): Promise<CouponResult> {
+  async addCouponStock(command: AddCouponCommand): Promise<CouponResult> {
     const couponId = command.couponId;
 
     const coupon = await this.couponRepository.findById(couponId);
@@ -66,7 +66,7 @@ export class CouponService {
     return await this.couponRepository.addCoupon(couponId);
   }
 
-  async deduct(command: DeductCouponCommand): Promise<CouponResult> {
+  async deductCouponStock(command: DeductCouponCommand): Promise<CouponResult> {
     const couponId = command.couponId;
 
     const coupon = await this.couponRepository.findById(couponId);

@@ -89,7 +89,7 @@ describe("ProductService", () => {
     });
   });
 
-  describe("addStock", () => {
+  describe("addProductStock", () => {
     it("다이슨 에어랩의 재고를 10개 추가하면 131개의 재고가 남아있어야 함✅", async () => {
       // mock & stub settings
       const updatedProduct = { id: 1, name: "다이슨 에어랩", stock: 131, price: 1200000 };
@@ -100,7 +100,7 @@ describe("ProductService", () => {
       const command: AddStockCommand = { productId: 1, amount: 10 };
 
       // real service calls
-      const result: ProductResult = await productService.addStock(command);
+      const result: ProductResult = await productService.addProductStock(command);
 
       // expectactions
       expect(result.stock).toBe(131);
@@ -118,7 +118,7 @@ describe("ProductService", () => {
       const command: AddStockCommand = { productId: 10, amount: 1 };
 
       // real service calls & expectactions
-      expect(productService.addStock(command)).rejects.toThrow("PRODUCT_NOT_FOUND");
+      expect(productService.addProductStock(command)).rejects.toThrow("PRODUCT_NOT_FOUND");
       expect(productRepositoryStub.findById).toHaveBeenCalledTimes(1);
       expect(productRepositoryStub.findById).toHaveBeenCalledWith(10);
       expect(productRepositoryStub.updateStock).not.toHaveBeenCalled();
@@ -132,14 +132,14 @@ describe("ProductService", () => {
       const command: AddStockCommand = { productId: 2, amount: 2_147_483_647 };
 
       // real service calls & expectactions
-      expect(productService.addStock(command)).rejects.toThrow("OVER_STOCK_LIMIT");
+      expect(productService.addProductStock(command)).rejects.toThrow("OVER_STOCK_LIMIT");
       expect(productRepositoryStub.findById).toHaveBeenCalledTimes(1);
       expect(productRepositoryStub.findById).toHaveBeenCalledWith(2);
       expect(productRepositoryStub.updateStock).not.toHaveBeenCalled();
     });
   });
 
-  describe("deductStock", () => {
+  describe("deductProductStock", () => {
     it("다이슨 에어랩의 재고를 1개 차감하면 120개의 재고가 남아있어야 함✅", async () => {
       // mock & stub settings
       const updatedProduct = { id: 1, name: "다이슨 에어랩", stock: 120, price: 1200000 };
@@ -150,7 +150,7 @@ describe("ProductService", () => {
       const command: DeductStockCommand = { productId: 1, amount: 1 };
 
       // real service calls
-      const result: ProductResult = await productService.deductStock(command);
+      const result: ProductResult = await productService.deductProductStock(command);
 
       // expectactions
       expect(result.stock).toBe(120);
@@ -168,7 +168,7 @@ describe("ProductService", () => {
       const command: DeductStockCommand = { productId: 10, amount: 1 };
 
       // real service calls & expectactions
-      expect(productService.deductStock(command)).rejects.toThrow("PRODUCT_NOT_FOUND");
+      expect(productService.deductProductStock(command)).rejects.toThrow("PRODUCT_NOT_FOUND");
       expect(productRepositoryStub.findById).toHaveBeenCalledTimes(1);
       expect(productRepositoryStub.findById).toHaveBeenCalledWith(10);
       expect(productRepositoryStub.updateStock).not.toHaveBeenCalled();
@@ -182,7 +182,7 @@ describe("ProductService", () => {
       const command: DeductStockCommand = { productId: 4, amount: 1 };
 
       // real service calls & expectactions
-      expect(productService.deductStock(command)).rejects.toThrow("NOT_ENOUGH_STOCK");
+      expect(productService.deductProductStock(command)).rejects.toThrow("NOT_ENOUGH_STOCK");
       expect(productRepositoryStub.findById).toHaveBeenCalledTimes(1);
       expect(productRepositoryStub.findById).toHaveBeenCalledWith(4);
       expect(productRepositoryStub.updateStock).not.toHaveBeenCalled();

@@ -51,7 +51,7 @@ export class PaymentFacade {
           productId: orderProduct.productId,
           amount: orderProduct.amount,
         };
-        await this.productService.deductStock(deductStockCommand);
+        await this.productService.deductProductStock(deductStockCommand);
         deductedOrderProducts++;
       } catch (error) {
         for (let i = 0; i < deductedOrderProducts; i++) {
@@ -59,7 +59,7 @@ export class PaymentFacade {
             productId: orderProducts[i].productId,
             amount: orderProducts[i].amount,
           };
-          await this.productService.addStock(addStockCommand);
+          await this.productService.addProductStock(addStockCommand);
         }
 
         throw error;
@@ -71,14 +71,14 @@ export class PaymentFacade {
         memberId,
         amount,
       };
-      await this.memberService.use(useBalanceCommand);
+      await this.memberService.useBalance(useBalanceCommand);
     } catch (error) {
       for (const orderProduct of orderProducts) {
         const addStockCommand: AddStockCommand = {
           productId: orderProduct.productId,
           amount: orderProduct.amount,
         };
-        await this.productService.addStock(addStockCommand);
+        await this.productService.addProductStock(addStockCommand);
       }
 
       throw error;
@@ -109,14 +109,14 @@ export class PaymentFacade {
           productId: orderProduct.productId,
           amount: orderProduct.amount,
         };
-        await this.productService.addStock(addStockCommand);
+        await this.productService.addProductStock(addStockCommand);
       }
 
       const chargeBalanceCommand: ChargeBalanceCommand = {
         memberId,
         amount,
       };
-      await this.memberService.charge(chargeBalanceCommand);
+      await this.memberService.chargeBalance(chargeBalanceCommand);
 
       throw error;
     }

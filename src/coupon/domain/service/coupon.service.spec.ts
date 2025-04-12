@@ -44,13 +44,13 @@ describe('CouponService', () => {
     });
   });
 
-  describe('issue', () => {
+  describe('issueCoupon', () => {
     it('아직 쿠폰이 없다면 발급할 수 있어야 함 ✅', async () => {
       memberCouponRepository.getCouponsByMemberAndCoupon.mockResolvedValue(null);
       couponRepository.findById.mockResolvedValue({ id: 1, stock: 5 });
       memberCouponRepository.issueCoupon.mockResolvedValue({ id: 100 });
 
-      const result = await service.issue({ memberId: 1, couponId: 1 });
+      const result = await service.issueCoupon({ memberId: 1, couponId: 1 });
 
       expect(result).toEqual({ id: 100 });
     });
@@ -58,16 +58,16 @@ describe('CouponService', () => {
     it('이미 쿠폰을 가지고 있다면 발급하면 안 됨 ❌', async () => {
       memberCouponRepository.getCouponsByMemberAndCoupon.mockResolvedValue({ id: 999 });
 
-      await expect(service.issue({ memberId: 1, couponId: 1 })).rejects.toThrow('ALREADY_HAVING_COUPON');
+      await expect(service.issueCoupon({ memberId: 1, couponId: 1 })).rejects.toThrow('ALREADY_HAVING_COUPON');
     });
   });
 
-  describe('use', () => {
+  describe('useCoupon', () => {
     it('보유 중이고 사용 안 한 쿠폰이면 사용할 수 있어야 함 ✅', async () => {
       memberCouponRepository.getCouponsByMemberAndCoupon.mockResolvedValue({ id: 1, isUsed: false });
       memberCouponRepository.useCoupon.mockResolvedValue({ id: 1, isUsed: true });
 
-      const result = await service.use({ memberId: 1, couponId: 1 });
+      const result = await service.useCoupon({ memberId: 1, couponId: 1 });
 
       expect(result).toEqual({ id: 1, isUsed: true });
     });
@@ -75,22 +75,22 @@ describe('CouponService', () => {
     it('쿠폰이 없으면 사용할 수 없어야 함 ❌', async () => {
       memberCouponRepository.getCouponsByMemberAndCoupon.mockResolvedValue(null);
 
-      await expect(service.use({ memberId: 1, couponId: 1 })).rejects.toThrow('NOT_FOUND_MEMBER_COUPON');
+      await expect(service.useCoupon({ memberId: 1, couponId: 1 })).rejects.toThrow('NOT_FOUND_MEMBER_COUPON');
     });
 
     it('이미 사용한 쿠폰이면 또 쓸 수 없어야 함 ❌', async () => {
       memberCouponRepository.getCouponsByMemberAndCoupon.mockResolvedValue({ id: 1, isUsed: true });
 
-      await expect(service.use({ memberId: 1, couponId: 1 })).rejects.toThrow('ALREADY_USED_COUPON');
+      await expect(service.useCoupon({ memberId: 1, couponId: 1 })).rejects.toThrow('ALREADY_USED_COUPON');
     });
   });
 
-  describe('add', () => {
+  describe('addCouponStock', () => {
     it('재고가 남아 있다면 쿠폰 재고를 늘릴 수 있어야 함 ✅', async () => {
       couponRepository.findById.mockResolvedValue({ id: 1, stock: 10 });
       couponRepository.addCoupon.mockResolvedValue({ id: 1, stock: 11 });
 
-      const result = await service.add({ couponId: 1 });
+      const result = await service.addCouponStock({ couponId: 1 });
 
       expect(result).toEqual({ id: 1, stock: 11 });
     });
@@ -98,16 +98,16 @@ describe('CouponService', () => {
     it('재고가 이미 최대라면 더 늘릴 수 없어야 함 ❌', async () => {
       couponRepository.findById.mockResolvedValue({ id: 1, stock: 2_147_483_647 });
 
-      await expect(service.add({ couponId: 1 })).rejects.toThrow('OVER_COUPON_STOCK_LIMIT');
+      await expect(service.addCouponStock({ couponId: 1 })).rejects.toThrow('OVER_COUPON_STOCK_LIMIT');
     });
   });
 
-  describe('deduct', () => {
+  describe('deductCouponStock', () => {
     it('재고가 있다면 쿠폰 재고를 차감할 수 있어야 함 ✅', async () => {
       couponRepository.findById.mockResolvedValue({ id: 1, stock: 5 });
       couponRepository.deductCoupon.mockResolvedValue({ id: 1, stock: 4 });
 
-      const result = await service.deduct({ couponId: 1 });
+      const result = await service.deductCouponStock({ couponId: 1 });
 
       expect(result).toEqual({ id: 1, stock: 4 });
     });
@@ -115,7 +115,7 @@ describe('CouponService', () => {
     it('재고가 0이라면 쿠폰을 차감하면 안 됨 ❌', async () => {
       couponRepository.findById.mockResolvedValue({ id: 1, stock: 0 });
 
-      await expect(service.deduct({ couponId: 1 })).rejects.toThrow('NOT_ENOUTH_STOCK');
+      await expect(service.deductCouponStock({ couponId: 1 })).rejects.toThrow('NOT_ENOUTH_STOCK');
     });
   });
 

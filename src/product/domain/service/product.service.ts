@@ -29,7 +29,7 @@ export class ProductService {
     return result;
   }
 
-  async addStock(command: AddStockCommand): Promise<ProductResult> {
+  async addProductStock(command: AddStockCommand): Promise<ProductResult> {
     const productId = command.productId;
     const amount = command.amount;
 
@@ -46,7 +46,7 @@ export class ProductService {
     return result;
   }
 
-  async deductStock(command: DeductStockCommand): Promise<ProductResult> {
+  async deductProductStock(command: DeductStockCommand): Promise<ProductResult> {
     const productId = command.productId;
     const amount = command.amount;
 

@@ -35,7 +35,7 @@ export class MemberService {
     return balanceResult;
   }
 
-  async charge(command: ChargeBalanceCommand): Promise<BalanceResult> {
+  async chargeBalance(command: ChargeBalanceCommand): Promise<BalanceResult> {
     const memberId = command.memberId;
     const amount = command.amount;
 
@@ -58,7 +58,7 @@ export class MemberService {
     return balanceResult;
   }
 
-  async use(command: UseBalanceCommand): Promise<BalanceResult> {
+  async useBalance(command: UseBalanceCommand): Promise<BalanceResult> {
     const memberId = command.memberId;
     const amount = command.amount;
 
