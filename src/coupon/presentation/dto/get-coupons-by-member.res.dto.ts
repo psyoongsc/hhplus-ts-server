@@ -8,8 +8,8 @@ export class GetCouponByMemberResDto {
   @Type(() => MemberCouponResult)
   @ApiProperty({
     example: [
-      { id: 1, memberId: 1, couponId: 1, couponName: "10% 할인 쿠폰", offFigure: 10, isUsed: false },
-      { id: 2, memberId: 1, couponId: 2, couponName: "15% 할인 쿠폰", offFigure: 15, isUsed: true },
+      { id: 1, memberId: 1, couponId: 1, couponName: "10% 할인 쿠폰", type: "PERCENTAGE", offFigure: 10, isUsed: false },
+      { id: 2, memberId: 1, couponId: 2, couponName: "1000원 할인 쿠폰", ype: "FLAT", offFigure: 1000, isUsed: true },
     ],
     description: "보유 쿠폰 리스트",
   })
