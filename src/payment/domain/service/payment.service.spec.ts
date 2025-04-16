@@ -4,16 +4,19 @@ import { IPAYMENT_REPOSITORY } from "../repository/payment.repository.interface"
 import { PaymentStatus } from "../dto/payment-status.enum";
 import { ProcessPaymentCommand } from "../dto/process-payment.command.dto";
 import { PaymentResult } from "../dto/payment.result.dto";
+import { PrismaService } from "@app/database/prisma/prisma.service";
+import { TransactionService } from "@app/database/prisma/transaction.service";
 
 describe("PaymentService", () => {
   let paymentService: PaymentService;
-  let paymentRepository: {
-    find: jest.Mock;
-    createPayment: jest.Mock;
-  };
+  let transactionStub: any;
+  let paymentRepositoryStub: any;
 
   beforeEach(async () => {
-    paymentRepository = {
+    transactionStub = {
+      executeInTransaction: jest.fn((cb) => cb({})),
+    };
+    paymentRepositoryStub = {
       find: jest.fn(),
       createPayment: jest.fn(),
     };
@@ -21,10 +24,8 @@ describe("PaymentService", () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PaymentService,
-        {
-          provide: IPAYMENT_REPOSITORY,
-          useValue: paymentRepository,
-        },
+        { provide: TransactionService, useValue: transactionStub },
+        { provide: IPAYMENT_REPOSITORY, useValue: paymentRepositoryStub },
       ],
     }).compile();
 
@@ -40,11 +41,11 @@ describe("PaymentService", () => {
       approved_at: new Date(),
     };
 
-    paymentRepository.find.mockResolvedValue([{ id: 1 }]);
+    paymentRepositoryStub.find.mockResolvedValue([{ id: 1 }]);
 
     await expect(paymentService.processPayment(command)).rejects.toThrow("ALREADY_PREOCESSED");
-    expect(paymentRepository.find).toHaveBeenCalledWith({ where: { orderId: 1 } });
-    expect(paymentRepository.createPayment).not.toHaveBeenCalled();
+    expect(paymentRepositoryStub.find).toHaveBeenCalledWith({ where: { orderId: 1 } }, {});
+    expect(paymentRepositoryStub.createPayment).not.toHaveBeenCalled();
   });
 
   it("결제 정보가 존재하지 않는 주문이라면 결제가 정상적으로 처리되어야 함✅", async () => {
@@ -66,20 +67,21 @@ describe("PaymentService", () => {
       approved_at: command.approved_at,
     };
 
-    paymentRepository.find.mockResolvedValue([]); // no previous payment
-    paymentRepository.createPayment.mockResolvedValue(expectedResult);
+    paymentRepositoryStub.find.mockResolvedValue([]); // no previous payment
+    paymentRepositoryStub.createPayment.mockResolvedValue(expectedResult);
 
     const result = await paymentService.processPayment(command);
 
     expect(result).toEqual(expectedResult);
-    expect(paymentRepository.find).toHaveBeenCalledWith({ where: { orderId: 2 } });
-    expect(paymentRepository.createPayment).toHaveBeenCalledWith(
+    expect(paymentRepositoryStub.find).toHaveBeenCalledWith({ where: { orderId: 2 } }, {});
+    expect(paymentRepositoryStub.createPayment).toHaveBeenCalledWith(
       2,
       10,
       7,
       15000,
       expect.any(Date),
       PaymentStatus.PAYMENT_COMPLETED,
+      {}
     );
   });
 });

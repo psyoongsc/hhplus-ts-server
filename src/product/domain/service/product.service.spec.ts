@@ -1,5 +1,4 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { ProductRepository } from "../../infrastructure/product.repository";
 import { ProductService } from "./product.service";
 import { Product } from "../entity/product.entity";
 import { ProductResult } from "../dto/product.result.dto";
@@ -7,10 +6,12 @@ import { GetProductCommand } from "../dto/get-product.command.dto";
 import { AddStockCommand } from "../dto/add-stock.command.dto";
 import { DeductStockCommand } from "../dto/deduct-stock.command.dto";
 import { IPRODUCT_REPOSITORY } from "../repository/product.repository.interface";
+import { TransactionService } from "@app/database/prisma/transaction.service";
 
 describe("ProductService", () => {
   let productService: ProductService;
-  let productRepositoryStub: Partial<ProductRepository>;
+  let transactionStub: any;
+  let productRepositoryStub: any;
 
   let mockProducts: Product[] = [
     { id: 1, name: "다이슨 에어랩", stock: 121, price: 1200000 },
@@ -23,6 +24,9 @@ describe("ProductService", () => {
   ];
 
   beforeEach(async () => {
+    transactionStub = {
+      executeInTransaction: jest.fn((cb) => cb({})),
+    };
     productRepositoryStub = {
       findAll: jest.fn(),
       findById: jest.fn(),
@@ -31,10 +35,17 @@ describe("ProductService", () => {
       deleteById: jest.fn(),
       find: jest.fn(),
       updateStock: jest.fn(),
+      prisma: {
+        $transaction: jest.fn((cb) => cb({})),
+      }
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ProductService, { provide: IPRODUCT_REPOSITORY, useValue: productRepositoryStub }],
+      providers: [
+        ProductService, 
+        { provide: TransactionService, useValue: transactionStub },
+        { provide: IPRODUCT_REPOSITORY, useValue: productRepositoryStub }
+      ],
     }).compile();
 
     productService = module.get<ProductService>(ProductService);
@@ -72,7 +83,7 @@ describe("ProductService", () => {
       // expectactions
       expect(result).toEqual(mockProducts[0]);
       expect(productRepositoryStub.findById).toHaveBeenCalledTimes(1);
-      expect(productRepositoryStub.findById).toHaveBeenCalledWith(1);
+      expect(productRepositoryStub.findById).toHaveBeenCalledWith(1, {});
     });
 
     it("존재하지 않는 상품을 조회할 경우 'PRODUCT_NOT_FOUND' 메시지와 함께 에러 발생❌", async () => {
@@ -85,7 +96,7 @@ describe("ProductService", () => {
       // real service calls & expectactions
       expect(productService.getProduct(command)).rejects.toThrow("PRODUCT_NOT_FOUND");
       expect(productRepositoryStub.findById).toHaveBeenCalledTimes(1);
-      expect(productRepositoryStub.findById).toHaveBeenCalledWith(10);
+      expect(productRepositoryStub.findById).toHaveBeenCalledWith(10, {});
     });
   });
 
@@ -105,9 +116,9 @@ describe("ProductService", () => {
       // expectactions
       expect(result.stock).toBe(131);
       expect(productRepositoryStub.findById).toHaveBeenCalledTimes(1);
-      expect(productRepositoryStub.findById).toHaveBeenCalledWith(1);
+      expect(productRepositoryStub.findById).toHaveBeenCalledWith(1, {});
       expect(productRepositoryStub.updateStock).toHaveBeenCalledTimes(1);
-      expect(productRepositoryStub.updateStock).toHaveBeenCalledWith(1, 131);
+      expect(productRepositoryStub.updateStock).toHaveBeenCalledWith(1, 131, {});
     });
 
     it("존재하지 않는 상품에 재고를 1개 추가하면 'PRODUCT_NOT_FOUND' 메시지와 함께 에러 발생❌", async () => {
@@ -120,7 +131,7 @@ describe("ProductService", () => {
       // real service calls & expectactions
       expect(productService.addProductStock(command)).rejects.toThrow("PRODUCT_NOT_FOUND");
       expect(productRepositoryStub.findById).toHaveBeenCalledTimes(1);
-      expect(productRepositoryStub.findById).toHaveBeenCalledWith(10);
+      expect(productRepositoryStub.findById).toHaveBeenCalledWith(10, {});
       expect(productRepositoryStub.updateStock).not.toHaveBeenCalled();
     });
 
@@ -134,7 +145,7 @@ describe("ProductService", () => {
       // real service calls & expectactions
       expect(productService.addProductStock(command)).rejects.toThrow("OVER_STOCK_LIMIT");
       expect(productRepositoryStub.findById).toHaveBeenCalledTimes(1);
-      expect(productRepositoryStub.findById).toHaveBeenCalledWith(2);
+      expect(productRepositoryStub.findById).toHaveBeenCalledWith(2, {});
       expect(productRepositoryStub.updateStock).not.toHaveBeenCalled();
     });
   });
@@ -155,9 +166,9 @@ describe("ProductService", () => {
       // expectactions
       expect(result.stock).toBe(120);
       expect(productRepositoryStub.findById).toHaveBeenCalledTimes(1);
-      expect(productRepositoryStub.findById).toHaveBeenCalledWith(1);
+      expect(productRepositoryStub.findById).toHaveBeenCalledWith(1, {});
       expect(productRepositoryStub.updateStock).toHaveBeenCalledTimes(1);
-      expect(productRepositoryStub.updateStock).toHaveBeenCalledWith(1, 120);
+      expect(productRepositoryStub.updateStock).toHaveBeenCalledWith(1, 120, {});
     });
 
     it("존재하지 않는 상품에 재고를 1개 차감하면 'PRODUCT_NOT_FOUND' 메시지와 함께 에러 발생❌", async () => {
@@ -170,7 +181,7 @@ describe("ProductService", () => {
       // real service calls & expectactions
       expect(productService.deductProductStock(command)).rejects.toThrow("PRODUCT_NOT_FOUND");
       expect(productRepositoryStub.findById).toHaveBeenCalledTimes(1);
-      expect(productRepositoryStub.findById).toHaveBeenCalledWith(10);
+      expect(productRepositoryStub.findById).toHaveBeenCalledWith(10, {});
       expect(productRepositoryStub.updateStock).not.toHaveBeenCalled();
     });
 
@@ -184,8 +195,36 @@ describe("ProductService", () => {
       // real service calls & expectactions
       expect(productService.deductProductStock(command)).rejects.toThrow("NOT_ENOUGH_STOCK");
       expect(productRepositoryStub.findById).toHaveBeenCalledTimes(1);
-      expect(productRepositoryStub.findById).toHaveBeenCalledWith(4);
+      expect(productRepositoryStub.findById).toHaveBeenCalledWith(4, {});
       expect(productRepositoryStub.updateStock).not.toHaveBeenCalled();
     });
+  });
+
+  describe("deductProductStockBulk", () => {
+    it("2개 상품을 각각 3개 씩 재고를 차감하면 차감한 상품들의 총 상품액을 반환함", async () => {
+      (productRepositoryStub.findById as jest.Mock)
+      .mockResolvedValueOnce({ id: 1, productName: "test1", stock: 100, price: 200 })
+      .mockResolvedValueOnce({ id: 2, productName: "test2", stock: 20, price: 7 });
+
+      (productRepositoryStub.updateStock as jest.Mock)
+      .mockResolvedValueOnce({ id: 1, productName: "test1", stock: 98, price: 200 })
+      .mockResolvedValueOnce({ id: 2, productName: "test2", stock: 18, price: 7 });
+
+      const predictCalls = [
+        [1, 98, {}],
+        [2, 18, {}],
+      ]
+
+      const commands: DeductStockCommand[] = [
+        { productId: 1, amount: 2 },
+        { productId: 2, amount: 2 },
+      ]
+
+      const result = await productService.deductProductStockBulk(commands);
+
+      expect(result).toBe(414);
+      expect(productRepositoryStub.updateStock).toHaveBeenCalledTimes(2);
+      expect(productRepositoryStub.updateStock.mock.calls).toEqual(predictCalls);
+    })
   });
 });

@@ -1,12 +1,13 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { ProductSalesStatRepository } from "../../infrastructure/product_sales_stat.repository";
 import { ProductSalesStatService } from "./productSalesStat.service";
 import { AddProductSalesStatCommand, PaidProduct } from "../dto/add-product-sales-stat.command.dto";
 import { IPRODUCT_SALES_STAT_REPOSITORY } from "../repository/product_sales_stat.interface.repository";
+import { TransactionService } from "@app/database/prisma/transaction.service";
 
 describe("ProductSalesStatService", () => {
   let productSalesStatService: ProductSalesStatService;
-  let productSalesStatRepositoryStub: Partial<ProductSalesStatRepository>;
+  let transactionStub: any;
+  let productSalesStatRepositoryStub: any;
 
   let mockPopularProducts = [
     { rank: 1, productId: 2, productName: "애플 맥세이프 충전기 20W", amount: 700, sales: 55300000 },
@@ -17,6 +18,9 @@ describe("ProductSalesStatService", () => {
   ];
 
   beforeEach(async () => {
+    transactionStub = {
+      executeInTransaction: jest.fn((cb) => cb({})),
+    };
     productSalesStatRepositoryStub = {
       findAll: jest.fn(),
       findById: jest.fn(),
@@ -25,11 +29,15 @@ describe("ProductSalesStatService", () => {
       deleteById: jest.fn(),
       find: jest.fn(),
       getTop5ProductByAmountLast3Days: jest.fn(),
+      prisma: {
+        $transaction: jest.fn((cb) => cb({})),
+      }
     };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProductSalesStatService,
+        { provide: TransactionService, useValue: transactionStub },
         { provide: IPRODUCT_SALES_STAT_REPOSITORY, useValue: productSalesStatRepositoryStub },
       ],
     }).compile();

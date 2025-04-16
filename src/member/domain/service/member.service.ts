@@ -8,6 +8,8 @@ import { Member } from "../entity/member.entity";
 import { BalanceHisotryRepository } from "../../infrastructure/balanceHistory.repository";
 import { IMEMBER_REPOSITORY } from "../repository/member.repository.interface";
 import { IBALANCE_HISTORY_REPOSITORY } from "../repository/balanceHistory.repository.interface";
+import { TransactionService } from "@app/database/prisma/transaction.service";
+import { Prisma } from "@prisma/client";
 
 @Injectable()
 export class MemberService {
@@ -16,68 +18,83 @@ export class MemberService {
     private readonly memberRepository: MemberRepository,
     @Inject(IBALANCE_HISTORY_REPOSITORY)
     private readonly balanceHistoryRepository: BalanceHisotryRepository,
+    private readonly transactionService: TransactionService,
   ) {}
 
-  async getBalance(command: GetBalanceCommand): Promise<BalanceResult> {
+  async getBalance(command: GetBalanceCommand, txc?: Prisma.TransactionClient): Promise<BalanceResult> {
     const memberId: number = command.memberId;
 
-    const result: Member = await this.memberRepository.findById(memberId);
+    return await this.transactionService.executeInTransaction(async (tx) => {
+      const client = txc ?? tx;
 
-    if (result === null) {
-      throw Error("MEMBER_NOT_FOUND");
-    }
+      const result: Member = await this.memberRepository.findById(memberId, client);
 
-    const balanceResult: BalanceResult = {
-      memberId: result.id,
-      balance: result.balance,
-    };
+      if (result === null) {
+        throw Error("MEMBER_NOT_FOUND");
+      }
 
-    return balanceResult;
+      const balanceResult: BalanceResult = {
+        memberId: result.id,
+        balance: result.balance,
+      };
+
+      return balanceResult;
+    });
   }
 
-  async chargeBalance(command: ChargeBalanceCommand): Promise<BalanceResult> {
+  async chargeBalance(command: ChargeBalanceCommand, txc?: Prisma.TransactionClient): Promise<BalanceResult> {
     const memberId = command.memberId;
     const amount = command.amount;
 
-    const member: Member = await this.memberRepository.findById(memberId);
-    if (member === null) {
-      throw Error("MEMBER_NOT_FOUND");
-    }
-    if (member.balance + amount > 2_147_483_647) {
-      throw Error("OVER_BALANCE_LIMIT");
-    }
+    return await this.transactionService.executeInTransaction(async (tx) => {
+      const client = txc ?? tx;
 
-    const result: Member = await this.memberRepository.updateBalance(memberId, member.balance + amount);
-    await this.balanceHistoryRepository.addHistory(memberId, amount);
+      const member: Member = await this.memberRepository.findById(memberId, client);
+      if (member === null) {
+        throw Error("MEMBER_NOT_FOUND");
+      }
+      if (member.balance + amount > 2_147_483_647) {
+        throw Error("OVER_BALANCE_LIMIT");
+      }
+  
+      const result: Member = await this.memberRepository.updateBalance(memberId, member.balance + amount, client);
+      await this.balanceHistoryRepository.addHistory(memberId, amount, client);
+  
+      const balanceResult: BalanceResult = {
+        memberId: result.id,
+        balance: result.balance,
+      };
+  
+      return balanceResult;
+    });
 
-    const balanceResult: BalanceResult = {
-      memberId: result.id,
-      balance: result.balance,
-    };
-
-    return balanceResult;
   }
 
-  async useBalance(command: UseBalanceCommand): Promise<BalanceResult> {
+  async useBalance(command: UseBalanceCommand, txc?: Prisma.TransactionClient): Promise<BalanceResult> {
     const memberId = command.memberId;
     const amount = command.amount;
 
-    const member: Member = await this.memberRepository.findById(memberId);
-    if (member === null) {
-      throw Error("MEMBER_NOT_FOUND");
-    }
-    if (member.balance < amount) {
-      throw Error("NOT_ENOUTH_BALANCE");
-    }
+    return await this.transactionService.executeInTransaction(async (tx) => {
+      const client = txc ?? tx;
 
-    const result: Member = await this.memberRepository.updateBalance(memberId, member.balance - amount);
-    await this.balanceHistoryRepository.addHistory(memberId, -1 * amount);
+      const member: Member = await this.memberRepository.findById(memberId, client);
+      if (member === null) {
+        throw Error("MEMBER_NOT_FOUND");
+      }
+      if (member.balance < amount) {
+        throw Error("NOT_ENOUTH_BALANCE");
+      }
+  
+      const result: Member = await this.memberRepository.updateBalance(memberId, member.balance - amount, client);
+      await this.balanceHistoryRepository.addHistory(memberId, -1 * amount, client);
+  
+      const balanceResult: BalanceResult = {
+        memberId: result.id,
+        balance: result.balance,
+      };
+  
+      return balanceResult;
+    });
 
-    const balanceResult: BalanceResult = {
-      memberId: result.id,
-      balance: result.balance,
-    };
-
-    return balanceResult;
   }
 }

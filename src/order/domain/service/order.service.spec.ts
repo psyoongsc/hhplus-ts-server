@@ -5,7 +5,9 @@ import { IORDER_PRODUCT_REPOSITORY } from "../repository/order_product.repositor
 import { OrderProductCommand } from "../dto/order-product.command.dto";
 import { CancelOrderCommand } from "../dto/cancel-order.command.dto";
 import { OrderStatus } from "../dto/order-status.enum";
-import { GetOrderCommand } from "../dto/get-order.command.dto";
+import { TransactionService } from "@app/database/prisma/transaction.service";
+import { PayOrderCommand } from "../dto/pay-order.command.dto";
+import { OrderResult } from "../dto/order.result.dto";
 
 jest.mock("@app/common/enum.common", () => ({
   getEnumFromValue: (_enum: any, value: string) => value,
@@ -13,13 +15,19 @@ jest.mock("@app/common/enum.common", () => ({
 
 describe("OrderService", () => {
   let orderService: OrderService;
+  let transactionStub: any;
   let orderRepository: any;
   let orderProductRepository: any;
 
   beforeEach(async () => {
+    transactionStub = {
+      executeInTransaction: jest.fn((cb) => cb({})),
+    };
+    
     orderRepository = {
       createOrder: jest.fn(),
       findById: jest.fn(),
+      paymentCompleteOrder: jest.fn(),
       cancelOrder: jest.fn(),
       getOrder: jest.fn(),
     };
@@ -31,6 +39,7 @@ describe("OrderService", () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OrderService,
+        { provide: TransactionService, useValue: transactionStub },
         { provide: IORDER_REPOSITORY, useValue: orderRepository },
         { provide: IORDER_PRODUCT_REPOSITORY, useValue: orderProductRepository },
       ],
@@ -52,7 +61,7 @@ describe("OrderService", () => {
       const mockOrder = {
         id: 1,
         memberId: 1,
-        totalSales: 3000,
+        totalSales: 4000,
         status: "결제준비",
       };
 
@@ -63,16 +72,75 @@ describe("OrderService", () => {
       expect(result).toEqual({
         id: 1,
         memberId: 1,
-        totalSales: 3000,
+        totalSales: 4000,
         status: "결제준비",
       });
 
-      expect(orderRepository.createOrder).toHaveBeenCalledWith(1, 3000, OrderStatus.PAYMENT_PREPARING);
+      expect(orderRepository.createOrder).toHaveBeenCalledWith(1, 4000, OrderStatus.PAYMENT_PREPARING, {});
       expect(orderProductRepository.createOrderProduct).toHaveBeenCalledTimes(2);
-      expect(orderProductRepository.createOrderProduct).toHaveBeenCalledWith(1, 101, 2);
-      expect(orderProductRepository.createOrderProduct).toHaveBeenCalledWith(1, 102, 1);
+      expect(orderProductRepository.createOrderProduct).toHaveBeenCalledWith(1, 101, 2, {});
+      expect(orderProductRepository.createOrderProduct).toHaveBeenCalledWith(1, 102, 1, {});
     });
   });
+
+  describe("payOrder", () => {
+    it("주문에 대해서 결제 완료 상태로 변경함✅", async () => {
+      (orderRepository.findById as jest.Mock).mockResolvedValue({
+        id: 1,
+        memberId: 1,
+        totalSales: 2400000,
+        status: "결제준비"
+      });
+      (orderRepository.paymentCompleteOrder as jest.Mock).mockResolvedValue({
+        id: 1,
+        memberId: 1,
+        totalSales: 2400000,
+        status: "결제완료"
+      })
+
+      const predictResult: OrderResult = {
+        id: 1,
+        memberId: 1,
+        totalSales: 2400000,
+        status: OrderStatus.PAYMENT_COMPLETED
+      }
+
+      const payOrderCommand: PayOrderCommand = {
+        orderId: 1
+      }
+
+      const result = await orderService.payOrder(payOrderCommand);
+
+      expect(result).toEqual(predictResult);
+      expect(orderRepository.findById).toHaveBeenCalledTimes(1);
+      expect(orderRepository.findById).toHaveBeenCalledWith(1, {});
+      expect(orderRepository.paymentCompleteOrder).toHaveBeenCalledTimes(1);
+      expect(orderRepository.findById).toHaveBeenCalledWith(1, {});
+    })
+
+    it("존재하지 않는 주문을 결제 완료하려 하면 'ORDER_NOT_FOUND' 메시지와 함께 에러 발생❌", async () => {
+      orderRepository.findById.mockResolvedValue(null);
+
+      const command: PayOrderCommand = { orderId: 999 };
+      
+      await expect(orderService.payOrder(command)).rejects.toThrow("ORDER_NOT_FOUND");
+      expect(orderRepository.paymentCompleteOrder).not.toHaveBeenCalled();
+    })
+
+    it("결제준비 상태가 아닌 주문을 결제 완료하려 하면 'CANT_PAY_ORDER' 메시지와 함께 에러 발생❌", async () => {
+      (orderRepository.findById as jest.Mock).mockResolvedValue({
+        id: 1,
+        memberId: 1,
+        totalSales: 2400000,
+        status: "결제완료"
+      });
+
+      const command: PayOrderCommand = { orderId: 1 };
+
+      await expect(orderService.payOrder(command)).rejects.toThrow("CANT_PAY_ORDER");
+      expect(orderRepository.paymentCompleteOrder).not.toHaveBeenCalled();
+    })
+  })
 
   describe("cancelOrder", () => {
     it("존재하지 않는 주문을 취소하려 하면 'ORDER_NOT_FOUND' 메시지와 함께 에러 발생❌", async () => {
@@ -87,15 +155,22 @@ describe("OrderService", () => {
     it("존재하는 주문을 취소하면 정상적으로 수행되어야 함✅", async () => {
       const command: CancelOrderCommand = { orderId: 1 };
 
-      const mockOrder = {
+      const mockBeforeCancel = {
+        id: 1,
+        memberId: 10,
+        totalSales: 5000,
+        status: "결제준비",
+      };
+
+      const mockAfterCancel = {
         id: 1,
         memberId: 10,
         totalSales: 5000,
         status: "주문취소",
       };
 
-      orderRepository.findById.mockResolvedValue(mockOrder);
-      orderRepository.cancelOrder.mockResolvedValue(mockOrder);
+      orderRepository.findById.mockResolvedValue(mockBeforeCancel);
+      orderRepository.cancelOrder.mockResolvedValue(mockAfterCancel);
 
       const result = await orderService.cancelOrder(command);
 
@@ -106,8 +181,8 @@ describe("OrderService", () => {
         status: "주문취소",
       });
 
-      expect(orderRepository.findById).toHaveBeenCalledWith(1);
-      expect(orderRepository.cancelOrder).toHaveBeenCalledWith(1);
+      expect(orderRepository.findById).toHaveBeenCalledWith(1, {});
+      expect(orderRepository.cancelOrder).toHaveBeenCalledWith(1, {});
     });
   });
 
@@ -137,7 +212,7 @@ describe("OrderService", () => {
       const result = await orderService.getOrder({ orderId: 3 });
 
       expect(result).toEqual(mockOrder);
-      expect(orderRepository.getOrder).toHaveBeenCalledWith(3);
+      expect(orderRepository.getOrder).toHaveBeenCalledWith(3, {});
     });
   });
 });

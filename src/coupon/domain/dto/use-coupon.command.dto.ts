@@ -10,4 +10,9 @@ export class UseCouponCommand {
   @IsPositive()
   @Max(2_147_483_647)
   couponId: number;
+
+  @IsInt()
+  @IsPositive()
+  @Max(2_147_483_647)
+  amount: number;
 }

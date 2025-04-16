@@ -47,7 +47,7 @@ export class CouponController {
     };
 
     try {
-      return await this.couponService.issue(command);
+      return await this.couponService.issueCoupon(command);
     } catch (error) {
       switch (error.message) {
         case "ALREADY_HAVING_COUPON":
@@ -73,7 +73,7 @@ export class CouponController {
     };
 
     try {
-      return await this.couponService.use(command);
+      return await this.couponService.useCoupon(command);
     } catch (error) {
       switch (error.message) {
         case "NOT_FOUND_MEMBER_COUPON":

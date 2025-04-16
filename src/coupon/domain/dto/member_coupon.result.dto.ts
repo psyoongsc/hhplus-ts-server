@@ -1,6 +1,6 @@
 import { MaxByteLength } from "@app/common/validator.common";
 import { Type } from "class-transformer";
-import { IsBoolean, IsIn, IsInt, IsPositive, IsString, Max } from "class-validator";
+import { IsBoolean, IsIn, IsInt, IsOptional, IsPositive, IsString, Max } from "class-validator";
 
 export class MemberCouponResult {
   @IsInt()

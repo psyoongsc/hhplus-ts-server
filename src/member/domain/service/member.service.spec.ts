@@ -6,16 +6,20 @@ import { ChargeBalanceCommand } from "../dto/charge-balance.command.dto";
 import { UseBalanceCommand } from "../dto/use-balance.command.dto";
 import { Member } from "../entity/member.entity";
 import { BalanceResult } from "../dto/balance.result.dto";
-import { BalanceHisotryRepository } from "../../infrastructure/balanceHistory.repository";
 import { IMEMBER_REPOSITORY } from "../repository/member.repository.interface";
 import { IBALANCE_HISTORY_REPOSITORY } from "../repository/balanceHistory.repository.interface";
+import { TransactionService } from "@app/database/prisma/transaction.service";
 
 describe("MemberService", () => {
   let memberService: MemberService;
-  let memberRepositoryStub: Partial<MemberRepository>;
-  let balanceHistoryRepositoryStub: Partial<BalanceHisotryRepository>;
+  let transactionStub: any;
+  let memberRepositoryStub: any;
+  let balanceHistoryRepositoryStub: any;
 
   beforeEach(async () => {
+    transactionStub = {
+      executeInTransaction: jest.fn((cb) => cb({})),
+    };
     memberRepositoryStub = {
       findAll: jest.fn(),
       findById: jest.fn(),
@@ -38,6 +42,7 @@ describe("MemberService", () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MemberService,
+        { provide: TransactionService, useValue: transactionStub },
         { provide: IMEMBER_REPOSITORY, useValue: memberRepositoryStub },
         { provide: IBALANCE_HISTORY_REPOSITORY, useValue: balanceHistoryRepositoryStub },
       ],
@@ -65,7 +70,7 @@ describe("MemberService", () => {
       // expectactions
       expect(result.balance).toBe(mockMember.balance);
       expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
-      expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1);
+      expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1, {});
     });
 
     it("존재하지 않는 사용자의 잔액을 조회하면 'MEMBER_NOT_FOUND' 메시지와 함께 에러 발생❌", async () => {
@@ -99,11 +104,11 @@ describe("MemberService", () => {
       // expectactions
       expect(result.balance).toBe(3000);
       expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
-      expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1);
+      expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1, {});
       expect(memberRepositoryStub.updateBalance).toHaveBeenCalledTimes(1);
-      expect(memberRepositoryStub.updateBalance).toHaveBeenCalledWith(1, 3000);
+      expect(memberRepositoryStub.updateBalance).toHaveBeenCalledWith(1, 3000, {});
       expect(balanceHistoryRepositoryStub.addHistory).toHaveBeenCalledTimes(1);
-      expect(balanceHistoryRepositoryStub.addHistory).toHaveBeenCalledWith(1, 2000);
+      expect(balanceHistoryRepositoryStub.addHistory).toHaveBeenCalledWith(1, 2000, {});
     });
 
     it("존재하지 않는 사용자가 2000원을 충전하면 'MEMBER_NOT_FOUND' 메시지와 함께 에러 발생❌", async () => {
@@ -117,7 +122,7 @@ describe("MemberService", () => {
       // real service calls & expectactions
       await expect(memberService.chargeBalance(chargeBalanceCommand)).rejects.toThrow("MEMBER_NOT_FOUND");
       expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
-      expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1);
+      expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1, {});
       expect(memberRepositoryStub.updateBalance).not.toHaveBeenCalled();
       expect(balanceHistoryRepositoryStub.addHistory).not.toHaveBeenCalled();
     });
@@ -133,7 +138,7 @@ describe("MemberService", () => {
       // real service calls & expectations
       await expect(memberService.chargeBalance(chargeBalanceCommand)).rejects.toThrow("OVER_BALANCE_LIMIT");
       expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
-      expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1);
+      expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1, {});
       expect(memberRepositoryStub.updateBalance).not.toHaveBeenCalled();
       expect(balanceHistoryRepositoryStub.addHistory).not.toHaveBeenCalled();
     });
@@ -156,11 +161,11 @@ describe("MemberService", () => {
       // expectactions
       expect(result.balance).toBe(6000);
       expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
-      expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1);
+      expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1, {});
       expect(memberRepositoryStub.updateBalance).toHaveBeenCalledTimes(1);
-      expect(memberRepositoryStub.updateBalance).toHaveBeenCalledWith(1, 6000);
+      expect(memberRepositoryStub.updateBalance).toHaveBeenCalledWith(1, 6000, {});
       expect(balanceHistoryRepositoryStub.addHistory).toHaveBeenCalledTimes(1);
-      expect(balanceHistoryRepositoryStub.addHistory).toHaveBeenCalledWith(1, -4000);
+      expect(balanceHistoryRepositoryStub.addHistory).toHaveBeenCalledWith(1, -4000, {});
     });
 
     it("존재하지 않는 사용자자가 4000원을 사용하면 'MEMBER_NOT_FOUND' 메시지와 함께 에러 발생❌", async () => {
@@ -174,7 +179,7 @@ describe("MemberService", () => {
       // real service calls & expectactions
       await expect(memberService.useBalance(useBalanceCommand)).rejects.toThrow("MEMBER_NOT_FOUND");
       expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
-      expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1);
+      expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1, {});
       expect(memberRepositoryStub.updateBalance).not.toHaveBeenCalled();
       expect(balanceHistoryRepositoryStub.addHistory).not.toHaveBeenCalled();
     });
@@ -190,7 +195,7 @@ describe("MemberService", () => {
       // real service calls & expectations
       await expect(memberService.useBalance(useBalanceCommand)).rejects.toThrow("NOT_ENOUTH_BALANCE");
       expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
-      expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1);
+      expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1, {});
       expect(memberRepositoryStub.updateBalance).not.toHaveBeenCalled();
       expect(balanceHistoryRepositoryStub.addHistory).not.toHaveBeenCalled();
     });

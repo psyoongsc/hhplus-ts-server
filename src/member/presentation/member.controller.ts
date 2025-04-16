@@ -59,7 +59,7 @@ export class MemberController {
     };
 
     try {
-      return await this.memberService.charge(command);
+      return await this.memberService.chargeBalance(command);
     } catch (error) {
       switch (error.message) {
         case "MEMBER_NOT_FOUND":
@@ -83,7 +83,7 @@ export class MemberController {
     };
 
     try {
-      return await this.memberService.charge(command);
+      return await this.memberService.chargeBalance(command);
     } catch (error) {
       switch (error.message) {
         case "MEMBER_NOT_FOUND":

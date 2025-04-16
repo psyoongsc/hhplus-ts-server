@@ -9,9 +9,11 @@ import { OrderModule } from "@app/order/order.module";
 import { ProductModule } from "@app/product/product.module";
 import { ProductSalesStatModule } from "@app/productSalesStat/productSalesStat.module";
 import { PaymentFacade } from "./application/payment.facade";
+import { PrismaClient } from "@prisma/client";
+import { CouponModule } from "@app/coupon/coupon.module";
 
 @Module({
-  imports: [PrismaModule, MemberModule, OrderModule, ProductModule, ProductSalesStatModule],
+  imports: [PrismaModule, MemberModule, OrderModule, ProductModule, CouponModule, ProductSalesStatModule],
   controllers: [PaymentController],
   providers: [
     PaymentService,

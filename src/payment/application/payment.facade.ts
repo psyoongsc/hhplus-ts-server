@@ -6,91 +6,65 @@ import { ProductService } from "@app/product/domain/service/product.service";
 import { ProductSalesStatService } from "@app/productSalesStat/domain/service/productSalesStat.service";
 import { PaymentService } from "../domain/service/payment.service";
 import { ProcessPaymentCommand } from "../domain/dto/process-payment.command.dto";
-import { Payment } from "@prisma/client";
+import { Payment, Prisma } from "@prisma/client";
 import { GetOrderCommand } from "@app/order/domain/dto/get-order.command.dto";
 import { DeductStockCommand } from "@app/product/domain/dto/deduct-stock.command.dto";
-import { AddStockCommand } from "@app/product/domain/dto/add-stock.command.dto";
 import { UseBalanceCommand } from "@app/member/domain/dto/use-balance.command.dto";
 import { PaymentResult } from "../domain/dto/payment.result.dto";
-import { ChargeBalanceCommand } from "@app/member/domain/dto/charge-balance.command.dto";
 import {
   AddProductSalesStatCommand,
   PaidProduct,
 } from "@app/productSalesStat/domain/dto/add-product-sales-stat.command.dto";
+import { TransactionService } from "@app/database/prisma/transaction.service";
+import { CouponService } from "@app/coupon/domain/service/coupon.service";
+import { UseCouponCommand } from "@app/coupon/domain/dto/use-coupon.command.dto";
+import { PayOrderCommand } from "@app/order/domain/dto/pay-order.command.dto";
 
 @Injectable()
 export class PaymentFacade {
   constructor(
+    private readonly transactionService: TransactionService,
     private readonly paymentService: PaymentService,
     private readonly memberService: MemberService,
     private readonly orderService: OrderService,
     private readonly productService: ProductService,
+    private readonly couponService: CouponService,
     private readonly productSalesStatService: ProductSalesStatService,
   ) {}
 
-  async processPayment(processPaymentReqDto: ProcessPaymentFacadeReqDto): Promise<PaymentResult> {
+  async processPayment(processPaymentReqDto: ProcessPaymentFacadeReqDto, txc?: Prisma.TransactionClient): Promise<PaymentResult> {
     const orderId = processPaymentReqDto.orderId;
     const memberId = processPaymentReqDto.memberId;
     const couponId = processPaymentReqDto.couponId;
 
-    const getOrderCommand: GetOrderCommand = { orderId };
-    let order;
+    return await this.transactionService.executeInTransaction(async (tx) => {
+      const client = txc ?? tx;
 
-    order = await this.orderService.getOrder(getOrderCommand);
-    if (order == null) {
-      throw new Error("NOT_FOUND_ORDER");
-    }
+      const payOrderCommand: PayOrderCommand = { orderId };
+      await this.orderService.payOrder(payOrderCommand, client);
 
-    const amount = order.totalSales;
-    const orderProducts = order.orderProducts;
+      const getOrderCommand: GetOrderCommand = { orderId };
+      const order = await this.orderService.getOrder(getOrderCommand, client);
 
-    let deductedOrderProducts = 0;
-    for (const orderProduct of orderProducts) {
-      try {
-        const deductStockCommand: DeductStockCommand = {
-          productId: orderProduct.productId,
-          amount: orderProduct.amount,
-        };
-        await this.productService.deductProductStock(deductStockCommand);
-        deductedOrderProducts++;
-      } catch (error) {
-        for (let i = 0; i < deductedOrderProducts; i++) {
-          const addStockCommand: AddStockCommand = {
-            productId: orderProducts[i].productId,
-            amount: orderProducts[i].amount,
-          };
-          await this.productService.addProductStock(addStockCommand);
-        }
+      const deductStockCommands: DeductStockCommand[] = order.orderProducts.map(({ productId, amount }) => ({ productId, amount }));
 
-        throw error;
-      }
-    }
+      const amount = await this.productService.deductProductStockBulk(deductStockCommands, client);
 
-    try {
+      const useCouponCommand: UseCouponCommand = { memberId, couponId, amount };
+      const {coupon, discountedAmount} = await this.couponService.useCoupon(useCouponCommand, client);
+
       const useBalanceCommand: UseBalanceCommand = {
         memberId,
-        amount,
+        amount: discountedAmount,
       };
-      await this.memberService.useBalance(useBalanceCommand);
-    } catch (error) {
-      for (const orderProduct of orderProducts) {
-        const addStockCommand: AddStockCommand = {
-          productId: orderProduct.productId,
-          amount: orderProduct.amount,
-        };
-        await this.productService.addProductStock(addStockCommand);
-      }
+      await this.memberService.useBalance(useBalanceCommand, client);
 
-      throw error;
-    }
-
-    try {
       const today = new Date();
-      const processPaymentCommand: ProcessPaymentCommand = { orderId, memberId, couponId, approved_at: today, amount };
-      const payment: Payment = await this.paymentService.processPayment(processPaymentCommand);
+      const processPaymentCommand: ProcessPaymentCommand = { orderId, memberId, couponId, approved_at: today, amount: discountedAmount };
+      const payment: Payment = await this.paymentService.processPayment(processPaymentCommand, client);
 
       const salesDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      const paidProducts: PaidProduct[] = orderProducts.map((orderProduct) => ({
+      const paidProducts: PaidProduct[] = order.orderProducts.map((orderProduct) => ({
         productId: orderProduct.productId,
         productName: orderProduct.product.name,
         total_amount: orderProduct.amount,
@@ -100,25 +74,9 @@ export class PaymentFacade {
         salesDate,
         paidProducts,
       };
-      await this.productSalesStatService.addProductSalesStat(addProductSalesStatCommand);
+      await this.productSalesStatService.addProductSalesStat(addProductSalesStatCommand, client);
 
       return payment;
-    } catch (error) {
-      for (const orderProduct of orderProducts) {
-        const addStockCommand: AddStockCommand = {
-          productId: orderProduct.productId,
-          amount: orderProduct.amount,
-        };
-        await this.productService.addProductStock(addStockCommand);
-      }
-
-      const chargeBalanceCommand: ChargeBalanceCommand = {
-        memberId,
-        amount,
-      };
-      await this.memberService.chargeBalance(chargeBalanceCommand);
-
-      throw error;
-    }
+    });
   }
 }
