@@ -44,7 +44,7 @@ export class CouponService {
         throw new Error("ALREADY_HAVING_COUPON");
       }
   
-      await this.deductCouponStock({couponId});
+      await this.deductCouponStock({couponId}, client);
       return await this.memberCouponRepository.issueCoupon(memberId, couponId, client);
     });
   }

@@ -5,6 +5,7 @@ import { IsArray, IsDate, IsInt, IsPositive, IsString, Max, Min } from "class-va
 
 export class AddProductSalesStatReqDto {
   @IsDate()
+  @Type(() => Date)
   @ApiProperty({ example: "2025-03-10", description: "판매 날짜" })
   salesDate: Date;
 
