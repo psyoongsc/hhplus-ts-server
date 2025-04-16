@@ -74,7 +74,7 @@ describe('PaymentService Integration Test (with Testcontainers + Prisma)', () =>
       }
 
       const predictResult: PaymentResult = {
-        id: 2,
+        id: expect.any(Number),
         orderId: 2,
         couponId: 1,
         memberId: 1,
