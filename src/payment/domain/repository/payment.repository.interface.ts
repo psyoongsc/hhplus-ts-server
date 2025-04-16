@@ -1,5 +1,5 @@
 import { IRepository } from "@app/database/repository.interface";
-import { Payment } from "@prisma/client";
+import { Payment, Prisma } from "@prisma/client";
 import { PaymentStatus } from "../../domain/dto/payment-status.enum";
 
 export interface IPaymentRepository extends IRepository<Payment> {
@@ -10,6 +10,7 @@ export interface IPaymentRepository extends IRepository<Payment> {
     paid_amount: number,
     approved_at: Date,
     status: PaymentStatus,
+    tx?: Prisma.TransactionClient
   ): Promise<Payment>;
 }
 

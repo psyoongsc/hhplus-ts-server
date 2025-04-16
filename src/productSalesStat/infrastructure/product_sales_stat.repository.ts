@@ -2,7 +2,7 @@ import { PrismaRepository } from "@app/database/prismaRepository.impl";
 import { PrismaService } from "@app/database/prisma/prisma.service";
 import { Injectable } from "@nestjs/common";
 import { IProductSalesStatRepository } from "../domain/repository/product_sales_stat.interface.repository";
-import { Product_Sales_Stat } from "@prisma/client";
+import { Prisma, Product_Sales_Stat } from "@prisma/client";
 
 @Injectable()
 export class ProductSalesStatRepository
@@ -10,17 +10,19 @@ export class ProductSalesStatRepository
   implements IProductSalesStatRepository
 {
   constructor(protected readonly prisma: PrismaService) {
-    super(prisma, prisma.product_Sales_Stat);
+    super(prisma, (client) => client.product_Sales_Stat);
   }
 
-  async getTop5ProductByAmountLast3Days(): Promise<
+  async getTop5ProductByAmountLast3Days(tx?: Prisma.TransactionClient): Promise<
     { rank: number; productId: number; productName: string; amount: number; sales: number }[]
   > {
-    return await this.prisma.$queryRaw<
+    const client = tx ?? this.prisma;
+
+    return await client.$queryRaw<
       { rank: number; productId: number; productName: string; amount: number; sales: number }[]
     >`
       SELECT 
-        RANK() OVER (ORDER BY amount DESC) AS \`rank\`,
+        CONVERT(RANK() OVER (ORDER BY amount DESC), CHAR) AS \`rank\`,
         productId,
         productName,
         amount,

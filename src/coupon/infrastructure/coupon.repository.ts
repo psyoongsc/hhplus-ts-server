@@ -1,23 +1,29 @@
 import { PrismaRepository } from "@app/database/prismaRepository.impl"
-import { Coupon } from "@prisma/client";
+import { Coupon, Prisma } from "@prisma/client";
 import { ICouponRepository } from "../domain/repository/coupon.repository.interface";
 import { PrismaService } from "@app/database/prisma/prisma.service";
+import { Injectable } from "@nestjs/common";
 
+@Injectable()
 export class CouponRepository extends PrismaRepository<Coupon> implements ICouponRepository {
   constructor(protected readonly prisma: PrismaService) {
-    super(prisma, prisma.coupon);
+    super(prisma, (client) => client.coupon);
   }
 
-  async getAllAvailableCoupons(): Promise<Coupon[]> {
-    return await this.prisma.coupon.findMany({
+  async getAllAvailableCoupons(tx?: Prisma.TransactionClient): Promise<Coupon[]> {
+    const client = tx ?? this.prisma;
+
+    return await client.coupon.findMany({
       where: {
         stock: { gt: 0 },
       },
     })
   }
 
-  async addCoupon(couponId: number): Promise<Coupon> {
-    return await this.prisma.coupon.update({
+  async addCoupon(couponId: number, tx?: Prisma.TransactionClient): Promise<Coupon> {
+    const client = tx ?? this.prisma;
+
+    return await client.coupon.update({
       where: { id: couponId },
       data: {
         stock: {
@@ -27,8 +33,10 @@ export class CouponRepository extends PrismaRepository<Coupon> implements ICoupo
     })
   }
 
-  async deductCoupon(couponId: number): Promise<Coupon> {
-    return await this.prisma.coupon.update({
+  async deductCoupon(couponId: number, tx?: Prisma.TransactionClient): Promise<Coupon> {
+    const client = tx ?? this.prisma;
+    
+    return await client.coupon.update({
       where: { id: couponId },
       data: {
         stock: {

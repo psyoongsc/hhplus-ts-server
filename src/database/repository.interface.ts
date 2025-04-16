@@ -1,5 +1,3 @@
-import { Member } from "@prisma/client";
-
 export interface IRepository<T, ID = number> {
   findAll(): Promise<T[]>;
   findById(id: ID): Promise<T | null>;

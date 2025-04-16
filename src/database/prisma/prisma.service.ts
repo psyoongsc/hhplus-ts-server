@@ -16,6 +16,13 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
           url: databaseUrl,
         },
       },
+      transactionOptions: {
+        maxWait: 10000, // 클라이언트가 연결될 때까지 최대 기다리는 시간 (ms)
+        timeout: 15000, // 트랜잭션 타임아웃 시간 (ms)
+      },
+    });
+  }
+
   async onModuleInit() {
     await this.$connect();
   }

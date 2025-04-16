@@ -1,14 +1,14 @@
 import { PrismaService } from "@app/database/prisma/prisma.service";
 import { PrismaRepository } from "@app/database/prismaRepository.impl";
 import { Injectable } from "@nestjs/common";
-import { Payment } from "@prisma/client";
+import { Payment, Prisma } from "@prisma/client";
 import { IPaymentRepository } from "../domain/repository/payment.repository.interface";
 import { PaymentStatus } from "../domain/dto/payment-status.enum";
 
 @Injectable()
 export class PaymentRepository extends PrismaRepository<Payment> implements IPaymentRepository {
   constructor(protected readonly prisma: PrismaService) {
-    super(prisma, prisma.payment);
+    super(prisma, (client) => client.payment);
   }
 
   async createPayment(
@@ -18,8 +18,11 @@ export class PaymentRepository extends PrismaRepository<Payment> implements IPay
     paid_amount: number,
     approved_at: Date,
     status: PaymentStatus,
+    tx?: Prisma.TransactionClient
   ): Promise<Payment> {
-    return await this.prisma.payment.create({
+    const client = tx ?? this.prisma;
+
+    return await client.payment.create({
       data: {
         order: { connect: { id: orderId } },
         coupon: { connect: { id: couponId }},
