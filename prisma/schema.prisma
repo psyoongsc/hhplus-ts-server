@@ -106,5 +106,6 @@ model Member_Coupon {
   coupon  Coupon   @relation(fields: [couponId], references: [id])
   payment Payment? @relation("CouponToPayment")
 
-  @@unique([memberId, couponId])
+  @@unique([id, memberId], name: "id_memberId")
+  @@unique([memberId, couponId], name: "memberId_couponId")
 }
