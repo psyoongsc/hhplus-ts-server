@@ -1,8 +1,7 @@
-import { getDatasource } from "./util";
-
-const down = async () => {
-  await global.mysql.stop();
-  await (await getDatasource()).destroy();
+// test/it/example/teardown.ts
+export default async () => {
+  if (globalThis.__DB_CONTAINER__) {
+    await globalThis.__DB_CONTAINER__.stop();
+    console.log('🧹 MySQL TestContainer stopped');
+  }
 };
-
-export default down;

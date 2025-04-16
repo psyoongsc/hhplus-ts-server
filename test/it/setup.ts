@@ -1,38 +1,64 @@
-import { DataSource } from "typeorm";
-import * as fs from "fs";
-import { MySqlContainer } from "@testcontainers/mysql";
-import { getDatasource } from "./util";
+import { MySqlContainer, StartedMySqlContainer } from '@testcontainers/mysql';
+import { execSync } from 'child_process';
+import * as fs from 'fs';
+import * as path from 'path';
 
-const init = async () => {
-  await Promise.all([initMysql()]);
-};
+let container: StartedMySqlContainer;
 
-const initMysql = async () => {
-  const mysql = await new MySqlContainer("mysql:8")
-    .withDatabase("dbname")
-    .withUser("root")
-    .withRootPassword("pw")
+export default async () => {
+  container = await new MySqlContainer('mysql:8')
+    .withUsername('test')
+    .withRootPassword('test')
+    .withDatabase('testdb')
     .start();
 
-  global.mysql = mysql;
+  const databaseUrl = `mysql://test:test@${container.getHost()}:${container.getMappedPort(3306)}/testdb`;
 
-  process.env.DB_HOST = mysql.getHost();
-  process.env.DB_PORT = mysql.getPort().toString();
-  process.env.DB_USERNAME = mysql.getUsername();
-  process.env.DB_PASSWORD = mysql.getUserPassword();
-  process.env.DB_DATABASE = mysql.getDatabase();
-  process.env.DB_LOGGING_ENABLED = "true";
+  process.env.TEST_DATABASE_URL = databaseUrl;
 
-  const datasource = await getDatasource();
-  await datasource.runMigrations();
-  await insertTestData(datasource);
-};
+  console.log('📦 MySQL TestContainer started:', databaseUrl);
 
-const insertTestData = async (datasource: DataSource) => {
-  const importSql = fs.readFileSync("./test/it/import.sql").toString();
-  for (const sql of importSql.split(";").filter((s) => s.trim() !== "")) {
-    await datasource.query(sql);
+  // Run Prisma migrations
+  execSync(`npx prisma migrate deploy`, {
+    stdio: 'inherit',
+    env: {
+      ...process.env,
+      DATABASE_URL: databaseUrl,
+    },
+  });
+
+  // Seed data from SQL file (if present)
+  const seedPath = path.join(__dirname, 'import.sql');
+
+  if (fs.existsSync(seedPath)) {
+    const sql = fs.readFileSync(seedPath, 'utf8');
+    const statements = sql
+      .split(';')
+      .map(stmt => stmt.trim())
+      .filter(Boolean);
+
+    const { PrismaClient } = await import('@prisma/client');
+    const prisma = new PrismaClient({
+      datasources: {
+        db: {
+          url: databaseUrl,
+        }
+      }
+    });
+
+    try {
+      for (const statement of statements) {
+        await prisma.$executeRawUnsafe(statement);
+      }
+      console.log('🌱 Seed data executed successfully.');
+    } catch (err) {
+      console.error('❌ Error executing seed SQL:', err);
+      throw err;
+    } finally {
+      await prisma.$disconnect();
+    }
   }
-};
 
-export default init;
+  // Save container for teardown
+  globalThis.__DB_CONTAINER__ = container;
+};
