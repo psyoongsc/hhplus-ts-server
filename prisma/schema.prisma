@@ -109,3 +109,41 @@ model Member_Coupon {
   @@unique([id, memberId], name: "id_memberId")
   @@unique([memberId, couponId], name: "memberId_couponId")
 }
+
+model Product_Sales_Stat_View {
+  id            Int       @id @default(autoincrement())
+  date          DateTime
+  rank          Int
+  productId     Int
+  productName   String
+  total_amount  Int
+  total_sales   Int
+
+  @@index([date, rank])
+}
+
+model Member_Coupon_Index {
+  id       Int     @id @default(autoincrement())
+  memberId Int
+  couponId Int
+  isUsed   Boolean
+
+  @@unique([id, memberId], name: "id_memberId")
+  @@unique([memberId, couponId], name: "memberId_couponId")
+
+  @@index([memberId])
+}
+
+model Order_Denorm {
+  id            Int       @id @default(autoincrement())
+  orderId       Int
+  memberId      Int
+  createdAt     DateTime
+  productId     Int
+  productName   String
+  price         Int
+  amount        Int
+  totalPrice    BigInt
+
+  @@index([orderId])
+}

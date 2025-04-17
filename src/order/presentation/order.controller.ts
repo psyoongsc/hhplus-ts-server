@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, NotFoundException, Post } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, NotFoundException, Param, ParseIntPipe, Post } from "@nestjs/common";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { OrderService } from "../domain/service/order.service";
 import { OrderProductReqDto } from "./dto/order-product.req.dto";
@@ -7,10 +7,33 @@ import { OrderProductCommand } from "../domain/dto/order-product.command.dto";
 import { CancelOrderReqDto } from "./dto/cancel-order.req.dto";
 import { CancelOrderResDto } from "./dto/cancel-order.res.dto";
 import { CancelOrderCommand } from "../domain/dto/cancel-order.command.dto";
+import { GetOrderCommand } from "../domain/dto/get-order.command.dto";
 @ApiTags("Order Management")
 @Controller("order")
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
+
+  @Get(":orderId")
+  @ApiOperation({ summary: "orderProduct" })
+  @ApiResponse({ status: 200, description: "200 - OK", type: OrderProductResDto })
+  @ApiResponse({ status: 404, description: "404 - NotFound", type: NotFoundException })
+  async getOrder(@Param("orderId", ParseIntPipe) orderId: number) {
+    const getOrderCommand: GetOrderCommand = {
+      orderId
+    }
+    return await this.orderService.getOrder(getOrderCommand);
+  }
+
+  // @Get("v2/:orderId")
+  // @ApiOperation({ summary: "orderProduct" })
+  // @ApiResponse({ status: 200, description: "200 - OK", type: OrderProductResDto })
+  // @ApiResponse({ status: 404, description: "404 - NotFound", type: NotFoundException })
+  // async getOrderV2(@Param("orderId", ParseIntPipe) orderId: number) {
+  //   const getOrderCommand: GetOrderCommand = {
+  //     orderId
+  //   }
+  //   return await this.orderService.getOrderV2(getOrderCommand);
+  // }
 
   @Post("")
   @ApiOperation({ summary: "orderProduct" })

@@ -20,6 +20,15 @@ export class ProductSalesStatController {
     return { products: products };
   }
 
+  // @Get("v2/top5")
+  // @ApiOperation({ summary: "getPopularProducts" })
+  // @ApiResponse({ status: 200, description: "200 - OK", type: GetPopularProductsResDto })
+  // async getPopularProductsV2(): Promise<GetPopularProductsResDto> {
+  //   const products = await this.productSalesStatService.getPopularProductsV2();
+
+  //   return { products: products };
+  // }
+
   @Post("add")
   @ApiOperation({ summary: "addProductSalesStat" })
   @ApiResponse({ status: 200, description: "200 - OK", type: AddProductSalesStatResDto })

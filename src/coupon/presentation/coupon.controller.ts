@@ -36,6 +36,18 @@ export class CouponController {
     return { coupons: coupons };
   }
 
+  // @Get("v2/:memberId")
+  // @ApiOperation({ summary: "get coupons (member having)" })
+  // @ApiParam({ name: "memberId", example: "1" })
+  // @ApiResponse({ status: 200, description: "200 - OK", type: GetCouponByMemberResDto })
+  // async getCouponsByMemberV2(@Param("memberId", ParseIntPipe) memberId: number): Promise<GetCouponByMemberResDto> {
+  //   const command: GetCouponsByMemberCommand = { memberId };
+
+  //   const coupons = await this.couponService.getCouponsByMemberV2(command);
+
+  //   return { coupons: coupons };
+  // }
+
   @Post("issue")
   @ApiOperation({ summary: "issueCoupon" })
   @ApiResponse({ status: 200, description: "200 - OK", type: IssueCouponResDto })

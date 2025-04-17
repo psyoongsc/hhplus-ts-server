@@ -13,6 +13,8 @@ import { DeductCouponCommand } from "../dto/deduct-coupon.command.dto";
 import { TransactionService } from "@app/database/prisma/transaction.service";
 import { Member_Coupon, Prisma } from "@prisma/client";
 import { UseCouponResult } from "../dto/use-coupon.result.dto";
+import { IMEMBER_COUPON_INDEX_REPOSITORY } from "../repository/member_coupon_index.repository.interface";
+import { MemberCouponIndexRepository } from "@app/coupon/infrastructure/member_coupon_index.repository";
 
 @Injectable()
 export class CouponService {
@@ -21,6 +23,8 @@ export class CouponService {
     private readonly couponRepository: CouponRepository,
     @Inject(IMEMBER_COUPON_REPOSITORY)
     private readonly memberCouponRepository: MemberCouponRepository,
+    // @Inject(IMEMBER_COUPON_INDEX_REPOSITORY)
+    // private readonly memberCouponIndexRepository: MemberCouponIndexRepository,
     private readonly transactionService: TransactionService,
   ) {}
 
@@ -129,4 +133,14 @@ export class CouponService {
       return await this.memberCouponRepository.getCouponsByMember(memberId, client);
     });
   }
+
+  // async getCouponsByMemberV2(command: GetCouponsByMemberCommand, txc?: Prisma.TransactionClient): Promise<MemberCouponResult[]> {
+  //   const memberId = command.memberId;
+
+  //   return await this.transactionService.executeInTransaction(async (tx) => {
+  //     const client = txc ?? tx;
+
+  //     return await this.memberCouponIndexRepository.getCouponsByMember(memberId, client);
+  //   });
+  // }
 }
