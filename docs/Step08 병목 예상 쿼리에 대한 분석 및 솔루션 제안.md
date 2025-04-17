@@ -187,13 +187,15 @@ async getTop5ProductByAmountLast3Days(tx?: Prisma.TransactionClient) {
 
 ### K6를 이용한 http_req_duration 을 분석
 
-![image.png](Step08%20%E1%84%87%E1%85%A7%E1%86%BC%E1%84%86%E1%85%A9%E1%86%A8%20%E1%84%8B%E1%85%A8%E1%84%89%E1%85%A1%E1%86%BC%20%E1%84%8F%E1%85%AF%E1%84%85%E1%85%B5%E1%84%8B%E1%85%A6%20%E1%84%83%E1%85%A2%E1%84%92%E1%85%A1%E1%86%AB%20%E1%84%87%E1%85%AE%E1%86%AB%E1%84%89%E1%85%A5%E1%86%A8%20%E1%84%86%E1%85%B5%E1%86%BE%20%E1%84%89%E1%85%A9%E1%86%AF%E1%84%85%E1%85%AE%E1%84%89%201d7f56acc0e1802fa972d7c86b8a156c/image.png)
+<img width="1907" alt="image" src="https://github.com/user-attachments/assets/727fc57c-5909-409e-bed3-7ce56e53664d" />
+
 
 ## 6. 각 병목 예상 지점의 응답 속도 측정
 
 ### 6-1. Eager Loading 사용 (초당 요청 1000건)
 
-![image.png](Step08%20%E1%84%87%E1%85%A7%E1%86%BC%E1%84%86%E1%85%A9%E1%86%A8%20%E1%84%8B%E1%85%A8%E1%84%89%E1%85%A1%E1%86%BC%20%E1%84%8F%E1%85%AF%E1%84%85%E1%85%B5%E1%84%8B%E1%85%A6%20%E1%84%83%E1%85%A2%E1%84%92%E1%85%A1%E1%86%AB%20%E1%84%87%E1%85%AE%E1%86%AB%E1%84%89%E1%85%A5%E1%86%A8%20%E1%84%86%E1%85%B5%E1%86%BE%20%E1%84%89%E1%85%A9%E1%86%AF%E1%84%85%E1%85%AE%E1%84%89%201d7f56acc0e1802fa972d7c86b8a156c/image%201.png)
+<img width="1630" alt="image 1" src="https://github.com/user-attachments/assets/8efbcf5a-2ba8-452a-8edf-98d648289561" />
+
 
 - 상품, 주문, 주문_상세 각각 데이터 1000건
 - HTTP 요청 응답
@@ -205,7 +207,8 @@ async getTop5ProductByAmountLast3Days(tx?: Prisma.TransactionClient) {
 
 ### 6-2. 통계 집계 사용 (초당 요청 1000건)
 
-![image.png](Step08%20%E1%84%87%E1%85%A7%E1%86%BC%E1%84%86%E1%85%A9%E1%86%A8%20%E1%84%8B%E1%85%A8%E1%84%89%E1%85%A1%E1%86%BC%20%E1%84%8F%E1%85%AF%E1%84%85%E1%85%B5%E1%84%8B%E1%85%A6%20%E1%84%83%E1%85%A2%E1%84%92%E1%85%A1%E1%86%AB%20%E1%84%87%E1%85%AE%E1%86%AB%E1%84%89%E1%85%A5%E1%86%A8%20%E1%84%86%E1%85%B5%E1%86%BE%20%E1%84%89%E1%85%A9%E1%86%AF%E1%84%85%E1%85%AE%E1%84%89%201d7f56acc0e1802fa972d7c86b8a156c/image%202.png)
+<img width="1902" alt="image 2" src="https://github.com/user-attachments/assets/7850420b-1d62-40dd-8ff4-72838e193769" />
+
 
 - 약 2주(17일) 간의 판매 이력 데이터 1000건
 - HTTP 요청 응답
@@ -334,7 +337,8 @@ SELECT
 				WHERE `hhplus`.`Order_Denorm`.`orderId` = 950
 ```
 
-![image.png](Step08%20%E1%84%87%E1%85%A7%E1%86%BC%E1%84%86%E1%85%A9%E1%86%A8%20%E1%84%8B%E1%85%A8%E1%84%89%E1%85%A1%E1%86%BC%20%E1%84%8F%E1%85%AF%E1%84%85%E1%85%B5%E1%84%8B%E1%85%A6%20%E1%84%83%E1%85%A2%E1%84%92%E1%85%A1%E1%86%AB%20%E1%84%87%E1%85%AE%E1%86%AB%E1%84%89%E1%85%A5%E1%86%A8%20%E1%84%86%E1%85%B5%E1%86%BE%20%E1%84%89%E1%85%A9%E1%86%AF%E1%84%85%E1%85%AE%E1%84%89%201d7f56acc0e1802fa972d7c86b8a156c/image%203.png)
+<img width="1902" alt="image 3" src="https://github.com/user-attachments/assets/0c9a9009-1a7e-406c-82d7-7d772b61c0c2" />
+
 
 | 지표 | 개선 전 | 개선 후 | 차이 |
 | --- | --- | --- | --- |
@@ -365,7 +369,8 @@ SELECT
         ORDER BY `rank`
 ```
 
-![image.png](Step08%20%E1%84%87%E1%85%A7%E1%86%BC%E1%84%86%E1%85%A9%E1%86%A8%20%E1%84%8B%E1%85%A8%E1%84%89%E1%85%A1%E1%86%BC%20%E1%84%8F%E1%85%AF%E1%84%85%E1%85%B5%E1%84%8B%E1%85%A6%20%E1%84%83%E1%85%A2%E1%84%92%E1%85%A1%E1%86%AB%20%E1%84%87%E1%85%AE%E1%86%AB%E1%84%89%E1%85%A5%E1%86%A8%20%E1%84%86%E1%85%B5%E1%86%BE%20%E1%84%89%E1%85%A9%E1%86%AF%E1%84%85%E1%85%AE%E1%84%89%201d7f56acc0e1802fa972d7c86b8a156c/image%204.png)
+<img width="1903" alt="image 4" src="https://github.com/user-attachments/assets/ad90a59c-3dea-4218-82d1-2bf9f74908df" />
+
 
 | 지표 | 개선 전 | 개선 후 | 차이 |
 | --- | --- | --- | --- |
