@@ -53,7 +53,7 @@ describe('CouponService Concurrency Test', () => {
   })
 
   describe("issueCoupon", () => {
-    it("재고가 2개 있는 쿠폰을 5명이 동시에 발급하면 5명만 발급받아야 함", async () => {
+    it("재고가 2개 있는 쿠폰을 5명이 동시에 발급하면 2명만 발급받아야 함", async () => {
       const results = await Promise.allSettled([
         couponService.issueCoupon({memberId: 1, couponId: 1}),
         couponService.issueCoupon({memberId: 2, couponId: 1}),
@@ -65,7 +65,7 @@ describe('CouponService Concurrency Test', () => {
       const success_count = results.filter((item) => item.status === "fulfilled");
       const afterStock = await prisma.coupon.findUnique({select: { stock: true }, where: { id: 1 }})
 
-      expect(success_count.length).toBe(5);
+      expect(success_count.length).toBe(2);
       expect(afterStock.stock).toBe(0);
     }, 20000)
 
