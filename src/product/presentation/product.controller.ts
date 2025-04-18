@@ -4,13 +4,13 @@ import { GetAllProductsResDto } from "./dto/get-all-products.res.dto";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { GetProductReqDto } from "./dto/get-product.req.dto";
 import { GetProductResDto } from "./dto/get-product.res.dto";
-import { GetProductCommand } from "../domain/dto/get-product.command";
+import { GetProductCommand } from "../domain/dto/get-product.command.dto";
 import { AddStockReqDto } from "./dto/add-stock.req.dto";
 import { AddStockResDto } from "./dto/add-stock.res.dto";
-import { AddStockCommand } from "../domain/dto/add-stock.command";
+import { AddStockCommand } from "../domain/dto/add-stock.command.dto";
 import { DeductStockReqDto } from "./dto/deduct-stock.req.dto";
 import { DeductStockResDto } from "./dto/deduct-stock.res.dto";
-import { DeductStockCommand } from "../domain/dto/deduct-stock.command";
+import { DeductStockCommand } from "../domain/dto/deduct-stock.command.dto";
 
 @ApiTags("Product Management")
 @Controller("product")
@@ -48,17 +48,17 @@ export class ProductController {
   }
 
   @Post("stock/add")
-  @ApiOperation({ summary: "addStock" })
+  @ApiOperation({ summary: "addProductStock" })
   @ApiResponse({ status: 200, description: "200 - OK", type: GetProductResDto })
   @ApiResponse({ status: 400, description: "400 - BadRequest", type: BadRequestException })
   @ApiResponse({ status: 404, description: "404 - NotFound", type: NotFoundException })
-  async addStock(@Body() addStockReqDto: AddStockReqDto): Promise<AddStockResDto> {
+  async addProductStock(@Body() addStockReqDto: AddStockReqDto): Promise<AddStockResDto> {
     const command: AddStockCommand = {
       ...addStockReqDto,
     };
 
     try {
-      return await this.productService.addStock(command);
+      return await this.productService.addProductStock(command);
     } catch (error) {
       switch (error.message) {
         case "PRODUCT_NOT_FOUND":
@@ -72,17 +72,17 @@ export class ProductController {
   }
 
   @Post("stock/deduct")
-  @ApiOperation({ summary: "deductStock" })
+  @ApiOperation({ summary: "deductProductStock" })
   @ApiResponse({ status: 200, description: "200 - OK", type: GetProductResDto })
   @ApiResponse({ status: 400, description: "400 - BadRequest", type: BadRequestException })
   @ApiResponse({ status: 404, description: "404 - NotFound", type: NotFoundException })
-  async deductStock(@Body() deductStockReqDto: DeductStockReqDto): Promise<DeductStockResDto> {
+  async deductProductStock(@Body() deductStockReqDto: DeductStockReqDto): Promise<DeductStockResDto> {
     const command: DeductStockCommand = {
       ...deductStockReqDto,
     };
 
     try {
-      return await this.productService.deductStock(command);
+      return await this.productService.deductProductStock(command);
     } catch (error) {
       switch (error.message) {
         case "PRODUCT_NOT_FOUND":

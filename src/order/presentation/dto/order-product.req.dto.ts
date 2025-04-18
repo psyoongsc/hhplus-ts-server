@@ -1,4 +1,4 @@
-import { Product } from "@app/order/domain/dto/order-product.command";
+import { Product } from "@app/order/domain/dto/order-product.command.dto";
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
 import { IsArray, IsInt, IsPositive, Max } from "class-validator";

@@ -2,8 +2,8 @@ import { Module } from "@nestjs/common";
 import { ProductService } from "./domain/service/product.service";
 import { ProductController } from "./presentation/product.controller";
 import { PrismaModule } from "@app/database/prisma/prisma.module";
-import { ProductRepository } from "./domain/infrastructure/product.repository";
-import { IPRODUCT_REPOSITORY } from "./domain/product.repository.interface";
+import { ProductRepository } from "./infrastructure/product.repository";
+import { IPRODUCT_REPOSITORY } from "./domain/repository/product.repository.interface";
 
 @Module({
   imports: [PrismaModule],

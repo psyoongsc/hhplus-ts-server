@@ -1,4 +1,4 @@
-import { ProductResult } from "@app/product/domain/dto/product.result";
+import { ProductResult } from "@app/product/domain/dto/product.result.dto";
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
 import { IsArray } from "class-validator";

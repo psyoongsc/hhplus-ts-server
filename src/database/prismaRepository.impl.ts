@@ -1,37 +1,47 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { IRepository } from "./repository.interface";
 
 export class PrismaRepository<T, ID = number> implements IRepository<T, ID> {
   constructor(
-    protected readonly prisma: PrismaClient,
-    protected readonly model: any,
+    protected readonly tx: Prisma.TransactionClient,
+    protected readonly getModel: (client: Prisma.TransactionClient) => any,
   ) {}
 
-  async findAll(): Promise<T[]> {
-    return this.model.findMany();
+  async findAll(tx?: Prisma.TransactionClient): Promise<T[]> {
+    const model = this.getModel(tx ?? this.tx);
+
+    return model.findMany();
   }
 
-  async findById(id: ID): Promise<T | null> {
-    return this.model.findUnique({
+  async findById(id: ID, tx?: Prisma.TransactionClient): Promise<T | null> {
+    const model = this.getModel(tx ?? this.tx);
+
+    return model.findUnique({
       where: { id },
     });
   }
 
-  async create(entity: Omit<T, "id">): Promise<T> {
-    return this.model.create({
+  async create(entity: Omit<T, "id">, tx?: Prisma.TransactionClient): Promise<T> {
+    const model = this.getModel(tx ?? this.tx);
+
+    return model.create({
       data: entity,
     });
   }
 
-  async updateById(id: ID, entity: Partial<T>): Promise<T> {
-    return this.model.update({
+  async updateById(id: ID, entity: Partial<T>, tx?: Prisma.TransactionClient): Promise<T> {
+    const model = this.getModel(tx ?? this.tx);
+
+    return model.update({
       where: { id },
       data: entity,
     });
   }
 
-  async deleteById(id: ID): Promise<T> {
-    return this.model.delete({
+  async deleteById(id: ID, tx?: Prisma.TransactionClient): Promise<T> {
+    const model = this.getModel(tx ?? this.tx);
+
+    return model.delete({
       where: { id },
     });
   }
@@ -40,16 +50,20 @@ export class PrismaRepository<T, ID = number> implements IRepository<T, ID> {
     where?: Partial<T>;
     select?: Partial<Record<keyof T, boolean>>;
     orderBy?: { [K in keyof T]?: "asc" | "desc" } | Array<{ [K in keyof T]?: "asc" | "desc" }>;
-  }): Promise<T[]> {
-    return this.model.findMany({
+  }, tx?: Prisma.TransactionClient): Promise<T[]> {
+    const model = this.getModel(tx ?? this.tx);
+
+    return model.findMany({
       where: options.where,
       select: options.select,
       orderBy: options.orderBy,
     });
   }
 
-  async upsert(options: { where: Partial<T>; create: T; update: Partial<T> }): Promise<T> {
-    return this.model.upsert({
+  async upsert(options: { where: Partial<T>; create: T; update: Partial<T> }, tx?: Prisma.TransactionClient): Promise<T> {
+    const model = this.getModel(tx ?? this.tx);
+
+    return model.upsert({
       where: options.where,
       create: options.create,
       update: options.update,

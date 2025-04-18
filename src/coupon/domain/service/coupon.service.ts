@@ -1,15 +1,20 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { IssueCouponCommand } from "../dto/issue-coupon.command";
-import { UseCouponCommand } from "../dto/use-coupon.command";
-import { GetCouponsByMemberCommand } from "../dto/get-coupons-by-member.command";
-import { CouponResult } from "../dto/coupon.result";
-import { MemberCouponResult } from "../dto/member_coupon.result";
-import { CouponRepository } from "../infrastructure/coupon.repository";
-import { MemberCouponRepository } from "../infrastructure/member_coupon.repository";
-import { ICOUPON_REPOSITORY } from "../coupon.repository.interface";
-import { IMEMBER_COUPON_REPOSITORY } from "../member_coupon.repository.interface";
-import { AddCouponCommand } from "../dto/add-coupon.command";
-import { DeductCouponCommand } from "../dto/deduct-coupon.command";
+import { IssueCouponCommand } from "../dto/issue-coupon.command.dto";
+import { UseCouponCommand } from "../dto/use-coupon.command.dto";
+import { GetCouponsByMemberCommand } from "../dto/get-coupons-by-member.command.dto";
+import { CouponResult } from "../dto/coupon.result.dto";
+import { MemberCouponResult } from "../dto/member_coupon.result.dto";
+import { CouponRepository } from "../../infrastructure/coupon.repository";
+import { MemberCouponRepository } from "../../infrastructure/member_coupon.repository";
+import { ICOUPON_REPOSITORY } from "../repository/coupon.repository.interface";
+import { IMEMBER_COUPON_REPOSITORY } from "../repository/member_coupon.repository.interface";
+import { AddCouponCommand } from "../dto/add-coupon.command.dto";
+import { DeductCouponCommand } from "../dto/deduct-coupon.command.dto";
+import { TransactionService } from "@app/database/prisma/transaction.service";
+import { Member_Coupon, Prisma } from "@prisma/client";
+import { UseCouponResult } from "../dto/use-coupon.result.dto";
+import { IMEMBER_COUPON_INDEX_REPOSITORY } from "../repository/member_coupon_index.repository.interface";
+import { MemberCouponIndexRepository } from "@app/coupon/infrastructure/member_coupon_index.repository";
 
 @Injectable()
 export class CouponService {
@@ -17,72 +22,125 @@ export class CouponService {
     @Inject(ICOUPON_REPOSITORY)
     private readonly couponRepository: CouponRepository,
     @Inject(IMEMBER_COUPON_REPOSITORY)
-    private readonly memberCouponRepository: MemberCouponRepository
+    private readonly memberCouponRepository: MemberCouponRepository,
+    // @Inject(IMEMBER_COUPON_INDEX_REPOSITORY)
+    // private readonly memberCouponIndexRepository: MemberCouponIndexRepository,
+    private readonly transactionService: TransactionService,
   ) {}
 
-  async getAllCoupons(): Promise<CouponResult[]> {
-    return await this.couponRepository.getAllAvailableCoupons();
+  async getAllCoupons(txc?: Prisma.TransactionClient): Promise<CouponResult[]> {
+    return await this.transactionService.executeInTransaction(async (tx) => {
+      const client = txc ?? tx;
+
+      return await this.couponRepository.getAllAvailableCoupons(client);
+    });
   }
 
-  async issue(command: IssueCouponCommand): Promise<MemberCouponResult> {
+  async issueCoupon(command: IssueCouponCommand, txc?: Prisma.TransactionClient): Promise<MemberCouponResult> {
     const memberId = command.memberId;
     const couponId = command.couponId;
 
-    const member_coupon = await this.memberCouponRepository.getCouponsByMemberAndCoupon(memberId, couponId);
-    if(member_coupon != null) {
-      throw new Error("ALREADY_HAVING_COUPON");
-    }
+    return await this.transactionService.executeInTransaction(async (tx) => {
+      const client = txc ?? tx;
 
-    await this.deduct({couponId});
-    return await this.memberCouponRepository.issueCoupon(memberId, couponId);
+      const member_coupon = await this.memberCouponRepository.getCouponsByMemberAndCoupon(memberId, couponId, client);
+      if(member_coupon != null) {
+        throw new Error("ALREADY_HAVING_COUPON");
+      }
+  
+      await this.deductCouponStock({couponId}, client);
+      return await this.memberCouponRepository.issueCoupon(memberId, couponId, client);
+    });
   }
 
-  async use(command: UseCouponCommand): Promise<MemberCouponResult> {
+  async useCoupon(command: UseCouponCommand, txc?: Prisma.TransactionClient): Promise<UseCouponResult> {
     const memberId = command.memberId;
     const couponId = command.couponId;
+    const amount = command.amount;
 
-    const member_coupon = await this.memberCouponRepository.getCouponsByMemberAndCoupon(memberId, couponId);
-    if(member_coupon == null) {
-      throw new Error("NOT_FOUND_MEMBER_COUPON");
-    }
-    if(member_coupon.isUsed) {
-      throw new Error("ALREADY_USED_COUPON");
-    }
+    return await this.transactionService.executeInTransaction(async (tx) => {
+      const client = txc ?? tx;
 
-    return await this.memberCouponRepository.useCoupon(memberId, couponId);
+      const member_coupon = await this.memberCouponRepository.getCouponsByIdAndMember(couponId, memberId, client);
+      if(member_coupon == null) {
+        throw new Error("NOT_FOUND_MEMBER_COUPON");
+      }
+      if(member_coupon.isUsed) {
+        throw new Error("ALREADY_USED_COUPON");
+      }
+
+      let discountedAmount = 0;
+      if (member_coupon.coupon.type == "FLAT") {
+        if (member_coupon.coupon.offFigure > amount){
+          throw new Error("CANT_USE_COUPON")
+        } 
+        else {
+          discountedAmount = amount - member_coupon.coupon.offFigure;
+        }
+      } 
+      else if (member_coupon.coupon.type == "PERCENTAGE") {
+        discountedAmount = (amount * (100 - member_coupon.coupon.offFigure) / 100) | 0;
+      }
+
+      const usedMember_coupon = await this.memberCouponRepository.useCoupon(memberId, couponId, client);
+
+      return { coupon: usedMember_coupon.coupon, discountedAmount };
+    });
   }
 
-  async add(command: AddCouponCommand): Promise<CouponResult> {
+  async addCouponStock(command: AddCouponCommand, txc?: Prisma.TransactionClient): Promise<CouponResult> {
     const couponId = command.couponId;
 
-    const coupon = await this.couponRepository.findById(couponId);
-    if(coupon == null) {
-      throw new Error("NOT_FOUND_COUPON");
-    }
-    if(coupon.stock == 2_147_483_647) {
-      throw new Error("OVER_COUPON_STOCK_LIMIT")
-    }
+    return await this.transactionService.executeInTransaction(async (tx) => {
+      const client = txc ?? tx;
 
-    return await this.couponRepository.addCoupon(couponId);
+      const coupon = await this.couponRepository.findById(couponId, client);
+      if(coupon == null) {
+        throw new Error("NOT_FOUND_COUPON");
+      }
+      if(coupon.stock == 2_147_483_647) {
+        throw new Error("OVER_COUPON_STOCK_LIMIT")
+      }
+  
+      return await this.couponRepository.addCoupon(couponId, client);
+    });
   }
 
-  async deduct(command: DeductCouponCommand): Promise<CouponResult> {
+  async deductCouponStock(command: DeductCouponCommand, txc?: Prisma.TransactionClient): Promise<CouponResult> {
     const couponId = command.couponId;
 
-    const coupon = await this.couponRepository.findById(couponId);
-    if(coupon == null) {
-      throw new Error("NOT_FOUND_COUPON");
-    }
-    if(coupon.stock == 0) {
-      throw new Error("NOT_ENOUTH_STOCK")
-    }
+    return await this.transactionService.executeInTransaction(async (tx) => {
+      const client = txc ?? tx;
 
-    return await this.couponRepository.deductCoupon(couponId);
+      const coupon = await this.couponRepository.findById(couponId, client);
+      if(coupon == null) {
+        throw new Error("NOT_FOUND_COUPON");
+      }
+      if(coupon.stock == 0) {
+        throw new Error("NOT_ENOUTH_STOCK")
+      }
+  
+      return await this.couponRepository.deductCoupon(couponId, client);
+    });
   }
 
-  async getCouponsByMember(command: GetCouponsByMemberCommand): Promise<MemberCouponResult[]> {
+  async getCouponsByMember(command: GetCouponsByMemberCommand, txc?: Prisma.TransactionClient): Promise<MemberCouponResult[]> {
     const memberId = command.memberId;
 
-    return await this.memberCouponRepository.getCouponsByMember(memberId);
+    return await this.transactionService.executeInTransaction(async (tx) => {
+      const client = txc ?? tx;
+
+      return await this.memberCouponRepository.getCouponsByMember(memberId, client);
+    });
   }
+
+  // async getCouponsByMemberV2(command: GetCouponsByMemberCommand, txc?: Prisma.TransactionClient): Promise<MemberCouponResult[]> {
+  //   const memberId = command.memberId;
+
+  //   return await this.transactionService.executeInTransaction(async (tx) => {
+  //     const client = txc ?? tx;
+
+  //     return await this.memberCouponIndexRepository.getCouponsByMember(memberId, client);
+  //   });
+  // }
 }

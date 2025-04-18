@@ -1,30 +1,17 @@
 import { MaxByteLength } from "@app/common/validator.common";
 import { ApiProperty } from "@nestjs/swagger";
+import { Coupon } from "@prisma/client";
 import { Type } from "class-transformer";
-import { IsBoolean, IsIn, IsInt, IsPositive, IsString, Max } from "class-validator";
+import { IsBoolean, IsIn, IsInt, IsObject, IsPositive, IsString, Max, Min } from "class-validator";
 
 export class UseCouponResDto {
-  @IsInt()
-  @IsPositive()
-  @Max(2_147_483_647)
-  @ApiProperty({ example: "1", description: "발행 쿠폰 식별자" })
-  id: number;
+  @IsObject()
+  @ApiProperty({ description: "사용한 쿠폰 정보" })
+  coupon: Coupon;
 
   @IsInt()
-  @IsPositive()
+  @Min(0)
   @Max(2_147_483_647)
-  @ApiProperty({ example: "1", description: "회원 식별자" })
-  memberId: number;
-
-  @IsInt()
-  @IsPositive()
-  @Max(2_147_483_647)
-  @ApiProperty({ example: "2", description: "쿠폰 식별자" })
-  couponId: number;
-
-  @IsBoolean()
-  @Type(() => Boolean)
-  @IsIn([true, false])
-  @ApiProperty({ example: "true", description: "사용 여부" })
-  isUsed: boolean;
+  @ApiProperty({ example: "9000", description: "쿠폰이 반영된 금액" })
+  discountedAmount: number;
 }
