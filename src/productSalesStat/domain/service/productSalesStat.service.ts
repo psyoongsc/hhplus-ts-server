@@ -6,12 +6,16 @@ import { ProductSalesStatRepository } from "../../infrastructure/product_sales_s
 import { AddProductSalesStatCommand, PaidProduct } from "../dto/add-product-sales-stat.command.dto";
 import { IPRODUCT_SALES_STAT_REPOSITORY } from "../repository/product_sales_stat.interface.repository";
 import { TransactionService } from "@app/database/prisma/transaction.service";
+import { IPRODUCT_SALES_STAT_VIEW_REPOSITORY } from "../repository/product_sales_stat_view.interface.repository";
+import { ProductSalesStatViewRepository } from "@app/productSalesStat/infrastructure/product_sales_stat_view.repository";
 
 @Injectable()
 export class ProductSalesStatService {
   constructor(
     @Inject(IPRODUCT_SALES_STAT_REPOSITORY)
     protected readonly productSalesStatRepository: ProductSalesStatRepository,
+    // @Inject(IPRODUCT_SALES_STAT_VIEW_REPOSITORY)
+    // protected readonly productSalesStatViewRepository: ProductSalesStatViewRepository,
     private readonly transactionService: TransactionService,
   ) {}
 
@@ -25,6 +29,14 @@ export class ProductSalesStatService {
       return formatted;
     });
   }
+
+  // async getPopularProductsV2(txc?: Prisma.TransactionClient): Promise<ProductSalesStatResult[]> {
+  //   return await this.transactionService.executeInTransaction(async (tx) => {
+  //     const client = txc ?? tx;
+
+  //     return await this.productSalesStatViewRepository.getTop5ProductByAmountLast3Days(client);
+  //   });
+  // }
 
   async addProductSalesStat(command: AddProductSalesStatCommand, txc?: Prisma.TransactionClient): Promise<AddProductSalesStatResult> {
     const salesDate: Date = command.salesDate;

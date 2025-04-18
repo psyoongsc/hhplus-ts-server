@@ -12,6 +12,8 @@ import { GetOrderCommand } from "../dto/get-order.command.dto";
 import { TransactionService } from "@app/database/prisma/transaction.service";
 import { Prisma } from "@prisma/client";
 import { PayOrderCommand } from "../dto/pay-order.command.dto";
+import { IORDER_DENORM_REPOSITORY } from "../repository/order_denorm.repository.interface";
+import { OrderDenormRepository } from "@app/order/infrastructure/order_denorm.repository";
 
 // TODO - 단위 테스트 작성 해야함
 @Injectable()
@@ -21,6 +23,8 @@ export class OrderService {
     private readonly orderRepository: OrderRepository,
     @Inject(IORDER_PRODUCT_REPOSITORY)
     private readonly orderProductRepository: OrderProductRepository,
+    // @Inject(IORDER_DENORM_REPOSITORY)
+    // private readonly orderDenormRepository: OrderDenormRepository,
     private readonly transactionService: TransactionService,
   ) {}
 
@@ -120,4 +124,19 @@ export class OrderService {
       return await this.orderRepository.getOrder(orderId, client);
     });
   }
+
+  // async getOrderV2(command: GetOrderCommand, txc?: Prisma.TransactionClient) {
+  //   const orderId = command.orderId;
+
+  //   return await this.transactionService.executeInTransaction(async (tx) => {
+  //     const client = txc ?? tx;
+
+  //     const result = await this.orderDenormRepository.getOrder(orderId, client);
+
+  //     return result.map(item => ({
+  //       ...item,
+  //       totalPrice: item.totalPrice.toString(),
+  //     }))
+  //   });
+  // }
 }
