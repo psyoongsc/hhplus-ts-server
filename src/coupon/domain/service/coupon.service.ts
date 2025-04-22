@@ -94,7 +94,7 @@ export class CouponService {
     return await this.transactionService.executeInTransaction(async (tx) => {
       const client = txc ?? tx;
 
-      const coupon = await this.couponRepository.findById(couponId, client);
+      const coupon = await this.couponRepository.findByIdWithPessimisticLock(couponId, client);
       if(coupon == null) {
         throw new Error("NOT_FOUND_COUPON");
       }
@@ -112,7 +112,7 @@ export class CouponService {
     return await this.transactionService.executeInTransaction(async (tx) => {
       const client = txc ?? tx;
 
-      const coupon = await this.couponRepository.findById(couponId, client);
+      const coupon = await this.couponRepository.findByIdWithPessimisticLock(couponId, client);
       if(coupon == null) {
         throw new Error("NOT_FOUND_COUPON");
       }
