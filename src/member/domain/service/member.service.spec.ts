@@ -4,11 +4,11 @@ import { MemberRepository } from "../../infrastructure/member.repository";
 import { GetBalanceCommand } from "../dto/get-balance.command.dto";
 import { ChargeBalanceCommand } from "../dto/charge-balance.command.dto";
 import { UseBalanceCommand } from "../dto/use-balance.command.dto";
-import { Member } from "../entity/member.entity";
 import { BalanceResult } from "../dto/balance.result.dto";
 import { IMEMBER_REPOSITORY } from "../repository/member.repository.interface";
 import { IBALANCE_HISTORY_REPOSITORY } from "../repository/balanceHistory.repository.interface";
 import { TransactionService } from "@app/database/prisma/transaction.service";
+import { Member } from "@prisma/client";
 
 describe("MemberService", () => {
   let memberService: MemberService;
@@ -28,6 +28,7 @@ describe("MemberService", () => {
       deleteById: jest.fn(),
       find: jest.fn(),
       updateBalance: jest.fn(),
+      updateBalanceWithOptimisticLock: jest.fn(),
     };
     balanceHistoryRepositoryStub = {
       findAll: jest.fn(),
@@ -58,7 +59,7 @@ describe("MemberService", () => {
   describe("getBalance", () => {
     it("4000원이 충전되어 있는 사용자의 잔액을 확인하면 4000원이 있어야 함✅", async () => {
       // mock & stub settings
-      const mockMember: Member = { id: 1, name: "psy", balance: 4000 };
+      const mockMember: Member = { id: 1, name: "psy", version: 1, balance: 4000 };
       (memberRepositoryStub.findById as jest.Mock).mockResolvedValue(mockMember);
 
       // dto settings
@@ -90,10 +91,10 @@ describe("MemberService", () => {
   describe("chargeBalance", () => {
     it("1000원이 충전되어 있는 사용자가 2000원을 충전하면 3000원이 있어야 함✅", async () => {
       // mock & stub settings
-      const mockFindMember: Member = { id: 1, name: "psy", balance: 1000 };
-      const mockChargedMember: Member = { id: 1, name: "psy", balance: 3000 };
+      const mockFindMember: Member = { id: 1, name: "psy", version: 1, balance: 1000 };
+      const mockChargedMember: Member = { id: 1, name: "psy", version: 2, balance: 3000 };
       (memberRepositoryStub.findById as jest.Mock).mockResolvedValue(mockFindMember);
-      (memberRepositoryStub.updateBalance as jest.Mock).mockResolvedValue(mockChargedMember);
+      (memberRepositoryStub.updateBalanceWithOptimisticLock as jest.Mock).mockResolvedValue(mockChargedMember);
 
       // dto settings
       const chargeBalanceCommand: ChargeBalanceCommand = { memberId: 1, amount: 2000 };
@@ -105,8 +106,8 @@ describe("MemberService", () => {
       expect(result.balance).toBe(3000);
       expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
       expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1, {});
-      expect(memberRepositoryStub.updateBalance).toHaveBeenCalledTimes(1);
-      expect(memberRepositoryStub.updateBalance).toHaveBeenCalledWith(1, 3000, {});
+      expect(memberRepositoryStub.updateBalanceWithOptimisticLock).toHaveBeenCalledTimes(1);
+      expect(memberRepositoryStub.updateBalanceWithOptimisticLock).toHaveBeenCalledWith(1, 3000, expect.any(Number), {});
       expect(balanceHistoryRepositoryStub.addHistory).toHaveBeenCalledTimes(1);
       expect(balanceHistoryRepositoryStub.addHistory).toHaveBeenCalledWith(1, 2000, {});
     });
@@ -123,13 +124,13 @@ describe("MemberService", () => {
       await expect(memberService.chargeBalance(chargeBalanceCommand)).rejects.toThrow("MEMBER_NOT_FOUND");
       expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
       expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1, {});
-      expect(memberRepositoryStub.updateBalance).not.toHaveBeenCalled();
+      expect(memberRepositoryStub.updateBalanceWithOptimisticLock).not.toHaveBeenCalled();
       expect(balanceHistoryRepositoryStub.addHistory).not.toHaveBeenCalled();
     });
 
     it("1000원이 충전되어 있는 사용자가 2_147_482_648원을 충전하면 'OVER_BALANCE_LIMIT' 메시지와 함께 에러 발생❌", async () => {
       // mock & stub settings
-      const mockFindMember: Member = { id: 1, name: "psy", balance: 3000 };
+      const mockFindMember: Member = { id: 1, name: "psy", version: 1, balance: 3000 };
       (memberRepositoryStub.findById as jest.Mock).mockResolvedValue(mockFindMember);
 
       // dto settings
@@ -139,7 +140,7 @@ describe("MemberService", () => {
       await expect(memberService.chargeBalance(chargeBalanceCommand)).rejects.toThrow("OVER_BALANCE_LIMIT");
       expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
       expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1, {});
-      expect(memberRepositoryStub.updateBalance).not.toHaveBeenCalled();
+      expect(memberRepositoryStub.updateBalanceWithOptimisticLock).not.toHaveBeenCalled();
       expect(balanceHistoryRepositoryStub.addHistory).not.toHaveBeenCalled();
     });
   });
@@ -147,10 +148,10 @@ describe("MemberService", () => {
   describe("useBalance", () => {
     it("10000원이 충전되어 있는 사용자가 4000원을 사용하면 6000원이 있어야 함✅", async () => {
       // mock & stub settings
-      const mockFindMember: Member = { id: 1, name: "psy", balance: 10000 };
-      const mockUsedMember: Member = { id: 1, name: "psy", balance: 6000 };
+      const mockFindMember: Member = { id: 1, name: "psy", version: 1, balance: 10000 };
+      const mockUsedMember: Member = { id: 1, name: "psy", version: 2, balance: 6000 };
       (memberRepositoryStub.findById as jest.Mock).mockResolvedValue(mockFindMember);
-      (memberRepositoryStub.updateBalance as jest.Mock).mockResolvedValue(mockUsedMember);
+      (memberRepositoryStub.updateBalanceWithOptimisticLock as jest.Mock).mockResolvedValue(mockUsedMember);
 
       // dto settings
       const useBalanceCommand: UseBalanceCommand = { memberId: 1, amount: 4000 };
@@ -162,8 +163,8 @@ describe("MemberService", () => {
       expect(result.balance).toBe(6000);
       expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
       expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1, {});
-      expect(memberRepositoryStub.updateBalance).toHaveBeenCalledTimes(1);
-      expect(memberRepositoryStub.updateBalance).toHaveBeenCalledWith(1, 6000, {});
+      expect(memberRepositoryStub.updateBalanceWithOptimisticLock).toHaveBeenCalledTimes(1);
+      expect(memberRepositoryStub.updateBalanceWithOptimisticLock).toHaveBeenCalledWith(1, 6000, expect.any(Number), {});
       expect(balanceHistoryRepositoryStub.addHistory).toHaveBeenCalledTimes(1);
       expect(balanceHistoryRepositoryStub.addHistory).toHaveBeenCalledWith(1, -4000, {});
     });
@@ -180,13 +181,13 @@ describe("MemberService", () => {
       await expect(memberService.useBalance(useBalanceCommand)).rejects.toThrow("MEMBER_NOT_FOUND");
       expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
       expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1, {});
-      expect(memberRepositoryStub.updateBalance).not.toHaveBeenCalled();
+      expect(memberRepositoryStub.updateBalanceWithOptimisticLock).not.toHaveBeenCalled();
       expect(balanceHistoryRepositoryStub.addHistory).not.toHaveBeenCalled();
     });
 
     it("3000원이 충전되어 있는 사용자가 4000원을 사용하면 'INVALID_AMOUNT' 메시지와 함께 에러 발생❌", async () => {
       // mock & stub settings
-      const mockFindMember: Member = { id: 1, name: "psy", balance: 3000 };
+      const mockFindMember: Member = { id: 1, name: "psy", version: 1, balance: 3000 };
       (memberRepositoryStub.findById as jest.Mock).mockResolvedValue(mockFindMember);
 
       // dto settings
@@ -196,7 +197,7 @@ describe("MemberService", () => {
       await expect(memberService.useBalance(useBalanceCommand)).rejects.toThrow("NOT_ENOUTH_BALANCE");
       expect(memberRepositoryStub.findById).toHaveBeenCalledTimes(1);
       expect(memberRepositoryStub.findById).toHaveBeenCalledWith(1, {});
-      expect(memberRepositoryStub.updateBalance).not.toHaveBeenCalled();
+      expect(memberRepositoryStub.updateBalanceWithOptimisticLock).not.toHaveBeenCalled();
       expect(balanceHistoryRepositoryStub.addHistory).not.toHaveBeenCalled();
     });
   });

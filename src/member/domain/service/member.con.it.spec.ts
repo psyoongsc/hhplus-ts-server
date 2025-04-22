@@ -55,7 +55,7 @@ describe('MemberService Concurrency Test', () => {
   })
 
   describe("useBalance", () => {
-    it("10000원을 가진 사용자가 5000원 사용을 동시에 5번 시도하면 2번만 성공해야 함", async () => {
+    it("10000원을 가진 사용자가 5000원 사용을 동시에 5번 시도하면 최대 2번만 성공해야 함(낙관적 락)", async () => {
       const result = await Promise.allSettled([
         memberService.useBalance({memberId: 1, amount: 5000}),
         memberService.useBalance({memberId: 1, amount: 5000}),
@@ -64,16 +64,16 @@ describe('MemberService Concurrency Test', () => {
         memberService.useBalance({memberId: 1, amount: 5000}),
       ])
 
-      const success_count = result.map((item) => item.status === "fulfilled").length;
+      const success_count = result.filter((item) => item.status === "fulfilled").length;
       const afterBalance = await prisma.member.findUnique({select: {balance: true}, where: {id: 1}});
 
-      expect(afterBalance.balance).toBe(0);
-      expect(success_count).toBe(2);
+      expect(afterBalance.balance).toBe(10000 - success_count * 5000);
+      expect(afterBalance.balance).toBeGreaterThanOrEqual(0);
     })
   })
 
   describe("chargeBalance", () => {
-    it("0원을 가진 사용자가 5000원 사용을 동시에 5번 시도하면 25000원이 있어야 함", async () => {
+    it("10000원을 가진 사용자가 5000원 사용을 동시에 5번 시도하면 성공한 만큼 잔액이 있어야 함(낙관적 락)", async () => {
       const result = await Promise.allSettled([
         memberService.chargeBalance({memberId: 1, amount: 5000}),
         memberService.chargeBalance({memberId: 1, amount: 5000}),
@@ -82,9 +82,10 @@ describe('MemberService Concurrency Test', () => {
         memberService.chargeBalance({memberId: 1, amount: 5000}),
       ])
 
+      const success_count = result.filter((item) => item.status === "fulfilled").length;
       const afterBalance = await prisma.member.findUnique({select: {balance: true}, where: {id: 1}});
 
-      expect(afterBalance.balance).toBe(25000);
+      expect(afterBalance.balance).toBe(10000 + success_count * 5000);
     })
   })
 });

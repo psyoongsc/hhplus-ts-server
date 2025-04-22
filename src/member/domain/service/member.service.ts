@@ -4,12 +4,11 @@ import { GetBalanceCommand } from "../dto/get-balance.command.dto";
 import { ChargeBalanceCommand } from "../dto/charge-balance.command.dto";
 import { UseBalanceCommand } from "../dto/use-balance.command.dto";
 import { MemberRepository } from "../../infrastructure/member.repository";
-import { Member } from "../entity/member.entity";
 import { BalanceHisotryRepository } from "../../infrastructure/balanceHistory.repository";
 import { IMEMBER_REPOSITORY } from "../repository/member.repository.interface";
 import { IBALANCE_HISTORY_REPOSITORY } from "../repository/balanceHistory.repository.interface";
 import { TransactionService } from "@app/database/prisma/transaction.service";
-import { Prisma } from "@prisma/client";
+import { Member, Prisma } from "@prisma/client";
 
 @Injectable()
 export class MemberService {
@@ -57,7 +56,7 @@ export class MemberService {
         throw Error("OVER_BALANCE_LIMIT");
       }
   
-      const result: Member = await this.memberRepository.updateBalance(memberId, member.balance + amount, client);
+      const result: Member = await this.memberRepository.updateBalanceWithOptimisticLock(memberId, member.balance + amount, member.version, client);
       await this.balanceHistoryRepository.addHistory(memberId, amount, client);
   
       const balanceResult: BalanceResult = {
@@ -85,7 +84,7 @@ export class MemberService {
         throw Error("NOT_ENOUTH_BALANCE");
       }
   
-      const result: Member = await this.memberRepository.updateBalance(memberId, member.balance - amount, client);
+      const result: Member = await this.memberRepository.updateBalanceWithOptimisticLock(memberId, member.balance - amount, member.version, client);
       await this.balanceHistoryRepository.addHistory(memberId, -1 * amount, client);
   
       const balanceResult: BalanceResult = {

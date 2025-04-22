@@ -15,4 +15,27 @@ export class MemberRepository extends PrismaRepository<Member> implements IMembe
     
     return await this.updateById(id, { balance }, client);
   }
+
+  async updateBalanceWithOptimisticLock(id: number, balance: number, version: number, tx: Prisma.TransactionClient): Promise<Member> {
+    
+    const maxRetries = 3;
+    for (let attemp = 1; attemp <= maxRetries; attemp++) {
+      const updated = await tx.member.updateMany({
+        where: {
+          id,
+          version
+        },
+        data: {
+          balance,
+          version: { increment: 1 },
+        }
+      })
+
+      if (updated.count === 1) {
+        return updated[0];
+      }
+    }
+
+    throw new Error("LOCK_CONFLICT");
+  }
 }
