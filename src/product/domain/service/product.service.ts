@@ -1,4 +1,4 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { BadRequestException, HttpException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { ProductResult } from "../dto/product.result.dto";
 import { GetProductCommand } from "../dto/get-product.command.dto";
 import { AddStockCommand } from "../dto/add-stock.command.dto";
@@ -7,6 +7,7 @@ import { ProductRepository } from "../../infrastructure/product.repository";
 import { Prisma, Product } from "@prisma/client";
 import { IPRODUCT_REPOSITORY } from "../repository/product.repository.interface";
 import { TransactionService } from "@app/database/prisma/transaction.service";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 @Injectable()
 export class ProductService {
@@ -20,7 +21,15 @@ export class ProductService {
     return await this.transactionService.executeInTransaction(async (tx) => {
       const client = txc ?? tx;
 
-      return await this.productRepository.findAll(client);
+      try {
+        return await this.productRepository.findAll(client);
+      } catch (error) {
+        if(error instanceof HttpException || error instanceof PrismaClientKnownRequestError) {
+          throw error;
+        } else {
+          throw new Error("상품 조회 중 예기치 못한 문제가 발생하였습니다. 관리자에게 문의해주세요.")
+        }
+      }
     });
   }
 
@@ -30,12 +39,20 @@ export class ProductService {
     return await this.transactionService.executeInTransaction(async (tx) => {
       const client = txc ?? tx;
 
-      const result: Product = await this.productRepository.findById(productId, client);
-      if (result === null) {
-        throw new Error("PRODUCT_NOT_FOUND");
-      }
+      try {
+        const result: Product = await this.productRepository.findById(productId, client);
+        if (result === null) {
+          throw new NotFoundException("PRODUCT_NOT_FOUND");
+        }
 
-      return result;
+        return result;
+      } catch (error) {
+        if(error instanceof HttpException || error instanceof PrismaClientKnownRequestError) {
+          throw error;
+        } else {
+          throw new Error("상품 정보 조회 중 예기치 못한 문제가 발생하였습니다. 관리자에게 문의해주세요.")
+        }
+      }
     });
   }
 
@@ -46,17 +63,25 @@ export class ProductService {
     return await this.transactionService.executeInTransaction(async (tx) => {
       const client = txc ?? tx;
 
-      const product: Product = await this.productRepository.findByIdWithPessimisticLock(productId, client);
-      if (product === null) {
-        throw new Error("PRODUCT_NOT_FOUND");
-      }
-      if (product.stock + amount > 2_147_483_647) {
-        throw new Error("OVER_STOCK_LIMIT");
-      }
+      try {
+        const product: Product = await this.productRepository.findByIdWithPessimisticLock(productId, client);
+        if (product === null) {
+          throw new NotFoundException("PRODUCT_NOT_FOUND");
+        }
+        if (product.stock + amount > 2_147_483_647) {
+          throw new BadRequestException("OVER_STOCK_LIMIT");
+        }
 
-      const result: Product = await this.productRepository.updateStock(productId, product.stock + amount, client);
+        const result: Product = await this.productRepository.updateStock(productId, product.stock + amount, client);
 
-      return result;
+        return result;
+      } catch (error) {
+        if(error instanceof HttpException || error instanceof PrismaClientKnownRequestError) {
+          throw error;
+        } else {
+          throw new Error("상품 재고 충전 중 예기치 못한 문제가 발생하였습니다. 관리자에게 문의해주세요.")
+        }
+      }
     });
   }
 
@@ -67,32 +92,48 @@ export class ProductService {
     return await this.transactionService.executeInTransaction(async (tx) => {
       const client = txc ?? tx;
 
-      const product: Product = await this.productRepository.findByIdWithPessimisticLock(productId, client);
+      try {
+        const product: Product = await this.productRepository.findByIdWithPessimisticLock(productId, client);
 
-      if (product === null) {
-        throw new Error("PRODUCT_NOT_FOUND");
+        if (product === null) {
+          throw new NotFoundException("PRODUCT_NOT_FOUND");
+        }
+        if (product.stock < amount) {
+          throw new BadRequestException("NOT_ENOUGH_STOCK");
+        }
+
+        const result: Product = await this.productRepository.updateStock(productId, product.stock - amount, client);
+
+        return result;
+      } catch (error) {
+        if(error instanceof HttpException || error instanceof PrismaClientKnownRequestError) {
+          throw error;
+        } else {
+          throw new Error("상품 재고 차감 중 예기치 못한 문제가 발생하였습니다. 관리자에게 문의해주세요.")
+        }
       }
-      if (product.stock < amount) {
-        throw new Error("NOT_ENOUGH_STOCK");
-      }
-
-      const result: Product = await this.productRepository.updateStock(productId, product.stock - amount, client);
-
-      return result;
-    })
+    });
   }
 
   async deductProductStockBulk(commands: DeductStockCommand[], txc?: Prisma.TransactionClient): Promise<number> {
     return await this.transactionService.executeInTransaction(async (tx) => {
       const client = txc ?? tx;
 
-      let result = 0;
-      for(const command of commands) {
-        const deductedProduct = await this.deductProductStock(command, client);
-        result += deductedProduct.price * command.amount;
-      }
+      try {
+        let result = 0;
+        for(const command of commands) {
+          const deductedProduct = await this.deductProductStock(command, client);
+          result += deductedProduct.price * command.amount;
+        }
 
-      return result;
-    })
+        return result;
+      } catch (error) {
+        if(error instanceof HttpException || error instanceof PrismaClientKnownRequestError) {
+          throw error;
+        } else {
+          throw new Error("상품 재고 차감 중 예기치 못한 문제가 발생하였습니다. 관리자에게 문의해주세요.")
+        }
+      }
+    });
   }
 }

@@ -1,4 +1,4 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { BadRequestException, HttpException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { IssueCouponCommand } from "../dto/issue-coupon.command.dto";
 import { UseCouponCommand } from "../dto/use-coupon.command.dto";
 import { GetCouponsByMemberCommand } from "../dto/get-coupons-by-member.command.dto";
@@ -15,6 +15,7 @@ import { Member_Coupon, Prisma } from "@prisma/client";
 import { UseCouponResult } from "../dto/use-coupon.result.dto";
 import { IMEMBER_COUPON_INDEX_REPOSITORY } from "../repository/member_coupon_index.repository.interface";
 import { MemberCouponIndexRepository } from "@app/coupon/infrastructure/member_coupon_index.repository";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 @Injectable()
 export class CouponService {
@@ -32,7 +33,15 @@ export class CouponService {
     return await this.transactionService.executeInTransaction(async (tx) => {
       const client = txc ?? tx;
 
-      return await this.couponRepository.getAllAvailableCoupons(client);
+      try {
+        return await this.couponRepository.getAllAvailableCoupons(client);
+      } catch (error) {
+        if(error instanceof HttpException || error instanceof PrismaClientKnownRequestError) {
+          throw error;
+        } else {
+          throw new Error("쿠폰 리스트 조회 중 예기치 못한 문제가 발생하였습니다. 관리자에게 문의해주세요.")
+        }
+      }
     });
   }
 
@@ -43,13 +52,21 @@ export class CouponService {
     return await this.transactionService.executeInTransaction(async (tx) => {
       const client = txc ?? tx;
 
-      const member_coupon = await this.memberCouponRepository.getCouponsByMemberAndCoupon(memberId, couponId, client);
-      if(member_coupon != null) {
-        throw new Error("ALREADY_HAVING_COUPON");
+      try {
+        const member_coupon = await this.memberCouponRepository.getCouponsByMemberAndCoupon(memberId, couponId, client);
+        if(member_coupon != null) {
+          throw new BadRequestException("ALREADY_HAVING_COUPON");
+        }
+    
+        await this.deductCouponStock({couponId}, client);
+        return await this.memberCouponRepository.issueCoupon(memberId, couponId, client);
+      } catch (error) {
+        if(error instanceof HttpException || error instanceof PrismaClientKnownRequestError) {
+          throw error;
+        } else {
+          throw new Error("쿠폰 발행 중 예기치 못한 문제가 발생하였습니다. 관리자에게 문의해주세요.")
+        }
       }
-  
-      await this.deductCouponStock({couponId}, client);
-      return await this.memberCouponRepository.issueCoupon(memberId, couponId, client);
     });
   }
 
@@ -61,48 +78,65 @@ export class CouponService {
     return await this.transactionService.executeInTransaction(async (tx) => {
       const client = txc ?? tx;
 
-      const member_coupon = await this.memberCouponRepository.getCouponsByIdAndMember(couponId, memberId, client);
-      if(member_coupon == null) {
-        throw new Error("NOT_FOUND_MEMBER_COUPON");
-      }
-      if(member_coupon.isUsed) {
-        throw new Error("ALREADY_USED_COUPON");
-      }
-
-      let discountedAmount = 0;
-      if (member_coupon.coupon.type == "FLAT") {
-        if (member_coupon.coupon.offFigure > amount){
-          throw new Error("CANT_USE_COUPON")
-        } 
-        else {
-          discountedAmount = amount - member_coupon.coupon.offFigure;
+      try {
+        const member_coupon = await this.memberCouponRepository.getCouponsByIdAndMember(couponId, memberId, client);
+        if(member_coupon == null) {
+          throw new NotFoundException("NOT_FOUND_MEMBER_COUPON");
         }
-      } 
-      else if (member_coupon.coupon.type == "PERCENTAGE") {
-        discountedAmount = (amount * (100 - member_coupon.coupon.offFigure) / 100) | 0;
+        if(member_coupon.isUsed) {
+          throw new BadRequestException("ALREADY_USED_COUPON");
+        }
+
+        let discountedAmount = 0;
+        if (member_coupon.coupon.type == "FLAT") {
+          if (member_coupon.coupon.offFigure > amount){
+            throw new BadRequestException("CANT_USE_COUPON")
+          } 
+          else {
+            discountedAmount = amount - member_coupon.coupon.offFigure;
+          }
+        } 
+        else if (member_coupon.coupon.type == "PERCENTAGE") {
+          discountedAmount = (amount * (100 - member_coupon.coupon.offFigure) / 100) | 0;
+        }
+
+        const usedMember_coupon = await this.memberCouponRepository.useCoupon(memberId, couponId, client);
+
+        return { coupon: usedMember_coupon.coupon, discountedAmount };
+      } catch (error) {
+        if(error instanceof HttpException || error instanceof PrismaClientKnownRequestError) {
+          throw error;
+        } else {
+          throw new Error("쿠폰 사용 중 예기치 못한 문제가 발생하였습니다. 관리자에게 문의해주세요.")
+        }
       }
-
-      const usedMember_coupon = await this.memberCouponRepository.useCoupon(memberId, couponId, client);
-
-      return { coupon: usedMember_coupon.coupon, discountedAmount };
     });
   }
 
   async addCouponStock(command: AddCouponCommand, txc?: Prisma.TransactionClient): Promise<CouponResult> {
     const couponId = command.couponId;
 
+
     return await this.transactionService.executeInTransaction(async (tx) => {
       const client = txc ?? tx;
 
-      const coupon = await this.couponRepository.findByIdWithPessimisticLock(couponId, client);
-      if(coupon == null) {
-        throw new Error("NOT_FOUND_COUPON");
+      try {
+        const coupon = await this.couponRepository.findByIdWithPessimisticLock(couponId, client);
+        if(coupon == null) {
+          throw new NotFoundException("NOT_FOUND_COUPON");
+        }
+        if(coupon.stock == 2_147_483_647) {
+          throw new BadRequestException("OVER_COUPON_STOCK_LIMIT")
+        }
+    
+        return await this.couponRepository.addCoupon(couponId, client);
+      } catch (error) {
+        if(error instanceof HttpException || error instanceof PrismaClientKnownRequestError) {
+          throw error;
+        } else {
+          throw new Error("쿠폰 재고 추가 중 예기치 못한 문제가 발생하였습니다. 관리자에게 문의해주세요.")
+        }
       }
-      if(coupon.stock == 2_147_483_647) {
-        throw new Error("OVER_COUPON_STOCK_LIMIT")
-      }
-  
-      return await this.couponRepository.addCoupon(couponId, client);
     });
   }
 
@@ -112,15 +146,23 @@ export class CouponService {
     return await this.transactionService.executeInTransaction(async (tx) => {
       const client = txc ?? tx;
 
-      const coupon = await this.couponRepository.findByIdWithPessimisticLock(couponId, client);
-      if(coupon == null) {
-        throw new Error("NOT_FOUND_COUPON");
+      try {
+        const coupon = await this.couponRepository.findByIdWithPessimisticLock(couponId, client);
+        if(coupon == null) {
+          throw new NotFoundException("NOT_FOUND_COUPON");
+        }
+        if(coupon.stock == 0) {
+          throw new BadRequestException("NOT_ENOUTH_STOCK")
+        }
+    
+        return await this.couponRepository.deductCoupon(couponId, client);
+      } catch (error) {
+        if(error instanceof HttpException || error instanceof PrismaClientKnownRequestError) {
+          throw error;
+        } else {
+          throw new Error("쿠폰 재고 차감 중 예기치 못한 문제가 발생하였습니다. 관리자에게 문의해주세요.")
+        }
       }
-      if(coupon.stock == 0) {
-        throw new Error("NOT_ENOUTH_STOCK")
-      }
-  
-      return await this.couponRepository.deductCoupon(couponId, client);
     });
   }
 
@@ -130,7 +172,15 @@ export class CouponService {
     return await this.transactionService.executeInTransaction(async (tx) => {
       const client = txc ?? tx;
 
-      return await this.memberCouponRepository.getCouponsByMember(memberId, client);
+      try {
+        return await this.memberCouponRepository.getCouponsByMember(memberId, client);
+      } catch (error) {
+        if(error instanceof HttpException || error instanceof PrismaClientKnownRequestError) {
+          throw error;
+        } else {
+          throw new Error("보유 쿠폰 조회 중 예기치 못한 문제가 발생하였습니다. 관리자에게 문의해주세요.")
+        }
+      }
     });
   }
 

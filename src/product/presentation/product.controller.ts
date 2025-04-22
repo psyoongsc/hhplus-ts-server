@@ -35,16 +35,7 @@ export class ProductController {
       ...getProductReqDto,
     };
 
-    try {
-      return await this.productService.getProduct(command);
-    } catch (error) {
-      switch (error.message) {
-        case "PRODUCT_NOT_FOUND":
-          throw new NotFoundException("상품을 찾을 수 없습니다.");
-        default:
-          throw error;
-      }
-    }
+    return await this.productService.getProduct(command);
   }
 
   @Post("stock/add")
@@ -57,18 +48,7 @@ export class ProductController {
       ...addStockReqDto,
     };
 
-    try {
-      return await this.productService.addProductStock(command);
-    } catch (error) {
-      switch (error.message) {
-        case "PRODUCT_NOT_FOUND":
-          throw new NotFoundException("상품을 찾을 수 없습니다.");
-        case "OVER_STOCK_LIMIT":
-          throw new NotFoundException("재고 추가 후 재고량이 최대 재고량인 2_147_483_647개 보다 많습니다.");
-        default:
-          throw error;
-      }
-    }
+    return await this.productService.addProductStock(command);
   }
 
   @Post("stock/deduct")
@@ -81,17 +61,6 @@ export class ProductController {
       ...deductStockReqDto,
     };
 
-    try {
-      return await this.productService.deductProductStock(command);
-    } catch (error) {
-      switch (error.message) {
-        case "PRODUCT_NOT_FOUND":
-          throw new NotFoundException("상품을 찾을 수 없습니다.");
-        case "NOT_ENOUGH_STOCK":
-          throw new NotFoundException("잔여 재고가 부족합니다.");
-        default:
-          throw error;
-      }
-    }
+    return await this.productService.deductProductStock(command);
   }
 }
