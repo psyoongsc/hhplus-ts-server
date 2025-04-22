@@ -46,7 +46,7 @@ export class ProductService {
     return await this.transactionService.executeInTransaction(async (tx) => {
       const client = txc ?? tx;
 
-      const product: Product = await this.productRepository.findById(productId, client);
+      const product: Product = await this.productRepository.findByIdWithPessimisticLock(productId, client);
       if (product === null) {
         throw new Error("PRODUCT_NOT_FOUND");
       }
@@ -67,7 +67,7 @@ export class ProductService {
     return await this.transactionService.executeInTransaction(async (tx) => {
       const client = txc ?? tx;
 
-      const product: Product = await this.productRepository.findById(productId, client);
+      const product: Product = await this.productRepository.findByIdWithPessimisticLock(productId, client);
 
       if (product === null) {
         throw new Error("PRODUCT_NOT_FOUND");

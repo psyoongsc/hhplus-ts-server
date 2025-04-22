@@ -45,7 +45,7 @@ describe('ProductService Concurrency Test', () => {
   })
 
   describe("addProductStock", () => {
-    it("재고가 20개인 상품에 대해서 5개 씩 5번 재고 차감을 하면 4번만 성공해야 함", async () => {
+    it("재고가 0개인 상품에 대해서 5개 씩 5번 재고 추가를 하면 재고가 25개 있어야 함", async () => {
       const result = await Promise.allSettled([
         productService.addProductStock({productId: 2, amount: 5}),
         productService.addProductStock({productId: 2, amount: 5}),
@@ -54,9 +54,11 @@ describe('ProductService Concurrency Test', () => {
         productService.addProductStock({productId: 2, amount: 5}),
       ])
 
+      const success_count = result.filter((item) => item.status === "fulfilled").length;
       const afterStock = await prisma.product.findUnique({select: {stock: true}, where: {id: 2}});
 
       expect(afterStock.stock).toBe(25);
+      expect(success_count).toBe(5)
     })
   })
 
@@ -70,7 +72,7 @@ describe('ProductService Concurrency Test', () => {
         productService.deductProductStock({productId: 1, amount: 5}),
       ])
 
-      const success_count = result.map((item) => item.status === "fulfilled").length;
+      const success_count = result.filter((item) => item.status === "fulfilled").length;
       const afterStock = await prisma.product.findUnique({select: {stock: true}, where: {id: 1}});
 
       expect(afterStock.stock).toBe(0);
