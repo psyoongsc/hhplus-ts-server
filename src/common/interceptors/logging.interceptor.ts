@@ -1,5 +1,6 @@
-import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from "@nestjs/common";
-import { Observable, tap } from "rxjs";
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
+import { Observable, tap } from 'rxjs';
+import { winstonLogger } from '../logger';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
@@ -12,7 +13,7 @@ export class LoggingInterceptor implements NestInterceptor {
     return next.handle().pipe(
       tap(() => {
         const elapsed = Date.now() - now;
-        console.log(`[${method}] ${url} - ${elapsed}ms`);
+        winstonLogger.info(`[${method}] ${url} - ${elapsed}ms`);
       }),
     );
   }
