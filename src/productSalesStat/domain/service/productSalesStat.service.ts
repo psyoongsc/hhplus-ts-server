@@ -57,16 +57,13 @@ export class ProductSalesStatService {
       try {
         let total_paidSales = 0;
         for (const paidProduct of paidProducts) {
-          const productStat: Partial<Product_Sales_Stat>[] = await this.productSalesStatRepository.find({
-            where: { salesDate, productId: paidProduct.productId },
-            select: { total_amount: true, total_sales: true },
-          }, client);
+          const productStat: Product_Sales_Stat[] = await this.productSalesStatRepository.findStatWithPessimisticLock(salesDate, paidProduct.productId, tx);
           if (productStat.length == 0) {
             await this.productSalesStatRepository.create({ salesDate, ...paidProduct }, client);
           } else {
             const paidProductAmount = paidProduct.total_amount;
             const paidProductSales = paidProduct.total_sales;
-            await this.productSalesStatRepository.updateById(paidProduct.productId, {
+            await this.productSalesStatRepository.updateById(productStat[0].id, {
               total_amount: productStat[0].total_amount + paidProductAmount,
               total_sales: productStat[0].total_sales + paidProductSales,
             }, client);

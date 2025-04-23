@@ -47,8 +47,12 @@ describe('ProductSalesStatService Concurrency Test', () => {
 
   describe("addProductSalesStat", () => {
     it("상품 식별자 1,2를 5개씩 5번 구매 이력을 추가하면 1은 25개, 2는 기존 판매 포함 30개의 판매 이력이 남아야 함", async () => {
+      const today = new Date();
+      let todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      todayDate = new Date(todayDate.getTime() + 9 * 60 * 60 * 1000);
+
       const command: AddProductSalesStatCommand = {
-        salesDate: new Date(),
+        salesDate: todayDate,
         paidProducts: [
           { productId: 1, productName: "다이슨 에어랩", total_amount: 5, total_sales: 6000000 },
           { productId: 2, productName: "애플 맥세이프 충전기 20W", total_amount: 5, total_sales: 495000 }
@@ -66,9 +70,8 @@ describe('ProductSalesStatService Concurrency Test', () => {
       const afterStat1 = await prisma.product_Sales_Stat.findUnique({select: {total_amount: true}, where: {id: 1}});
       const afterStat2 = await prisma.product_Sales_Stat.findUnique({select: {total_amount: true}, where: {id: 2}});
 
-      expect(afterStat2.total_amount).toBe(25);
       expect(afterStat1.total_amount).toBe(30);
-
+      expect(afterStat2.total_amount).toBe(25);
     })
   })
 });

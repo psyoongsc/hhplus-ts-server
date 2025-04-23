@@ -10,6 +10,12 @@ export default async () => {
     .withUsername('test')
     .withRootPassword('test')
     .withDatabase('testdb')
+    .withCopyFilesToContainer([
+      {
+        source: path.resolve(__dirname, './import.sql'),
+        target: '/docker-entrypoint-initdb.d/init.sql'
+      }
+    ])
     .start();
 
   const databaseUrl = `mysql://test:test@${container.getHost()}:${container.getMappedPort(3306)}/testdb`;
