@@ -12,6 +12,19 @@ export class ProductSalesStatRepository
   constructor(protected readonly prisma: PrismaService) {
     super(prisma, (client) => client.product_Sales_Stat);
   }
+  
+  async findStatWithPessimisticLock(salesDate: Date, productId: number, tx: Prisma.TransactionClient): Promise<Product_Sales_Stat[]> {
+    const client = tx ?? this.prisma;
+
+    const salesDateString = salesDate
+      .toISOString()
+      .split("T")[0];
+
+    const result = await client.$queryRaw<Product_Sales_Stat[]>`
+      SELECT * FROM Product_Sales_Stat WHERE salesDate=${salesDateString} AND productId=${productId} FOR UPDATE;`;
+
+    return result;
+  }
 
   async getTop5ProductByAmountLast3Days(tx?: Prisma.TransactionClient): Promise<
     { rank: number; productId: number; productName: string; amount: number; sales: number }[]

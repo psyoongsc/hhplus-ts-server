@@ -58,20 +58,7 @@ export class CouponController {
       ...issueCouponReqDto,
     };
 
-    try {
-      return await this.couponService.issueCoupon(command);
-    } catch (error) {
-      switch (error.message) {
-        case "ALREADY_HAVING_COUPON":
-          throw new BadRequestException("이미 쿠폰을 보유하고 있습니다.");
-        case "NOT_FOUND_COUPON":
-          throw new NotFoundException("쿠폰을 찾을 수 없습니다.");
-        case "NOT_ENOUTH_STOCK":
-          throw new BadRequestException("쿠폰의 재고가 부족합니다.");
-        default:
-          throw error;
-      }
-    }
+    return await this.couponService.issueCoupon(command);
   }
 
   @Post("use")
@@ -84,17 +71,6 @@ export class CouponController {
       ...useCouponReqDto,
     };
 
-    try {
-      return await this.couponService.useCoupon(command);
-    } catch (error) {
-      switch (error.message) {
-        case "NOT_FOUND_MEMBER_COUPON":
-          throw new Error("해당 쿠폰을 보유하고 있지 않습니다.");
-        case "ALREADY_USED_COUPON":
-          throw new Error("이미 해당 쿠폰을 사용하였습니다.");
-        default:
-          throw error;
-      }
-    }
+    return await this.couponService.useCoupon(command);
   }
 }

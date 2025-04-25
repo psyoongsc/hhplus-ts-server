@@ -44,18 +44,7 @@ export class OrderController {
       ...orderProductReqDto,
     };
 
-    try {
-      return await this.orderService.orderProduct(command);
-    } catch (error) {
-      switch (error.message) {
-        case "MEMBER_NOT_FOUND":
-          throw new NotFoundException("회원을 찾을 수 없습니다.");
-        case "PRODUCT_NOT_FOUND":
-          throw new NotFoundException("상품을 찾을 수 없습니다.");
-        default:
-          throw error;
-      }
-    }
+    return await this.orderService.orderProduct(command);
   }
 
   @Post("cancel")
@@ -67,15 +56,6 @@ export class OrderController {
       ...cancelOrderReqDto,
     };
 
-    try {
-      return await this.orderService.cancelOrder(command);
-    } catch (error) {
-      switch (error.message) {
-        case "NOT_FOUND_ORDER":
-          throw new NotFoundException("주문 정보를 찾을 수 없습니다.");
-        default:
-          throw error;
-      }
-    }
+    return await this.orderService.cancelOrder(command);
   }
 }

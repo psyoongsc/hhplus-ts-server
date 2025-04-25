@@ -17,6 +17,7 @@ model Member {
   id      Int    @id @default(autoincrement())
   name    String @default("anonymous")
   balance Int    @default(0)
+  version Int    @default(0)
 
   balanceHistories Balance_History[]
   payments         Payment[]         @relation("MemberToPayment")

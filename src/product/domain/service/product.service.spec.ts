@@ -30,6 +30,7 @@ describe("ProductService", () => {
     productRepositoryStub = {
       findAll: jest.fn(),
       findById: jest.fn(),
+      findByIdWithPessimisticLock: jest.fn(),
       create: jest.fn(),
       updateById: jest.fn(),
       deleteById: jest.fn(),
@@ -104,7 +105,7 @@ describe("ProductService", () => {
     it("다이슨 에어랩의 재고를 10개 추가하면 131개의 재고가 남아있어야 함✅", async () => {
       // mock & stub settings
       const updatedProduct = { id: 1, name: "다이슨 에어랩", stock: 131, price: 1200000 };
-      (productRepositoryStub.findById as jest.Mock).mockResolvedValue(mockProducts[0]);
+      (productRepositoryStub.findByIdWithPessimisticLock as jest.Mock).mockResolvedValue(mockProducts[0]);
       (productRepositoryStub.updateStock as jest.Mock).mockResolvedValue(updatedProduct);
 
       // dto settings
@@ -115,37 +116,37 @@ describe("ProductService", () => {
 
       // expectactions
       expect(result.stock).toBe(131);
-      expect(productRepositoryStub.findById).toHaveBeenCalledTimes(1);
-      expect(productRepositoryStub.findById).toHaveBeenCalledWith(1, {});
+      expect(productRepositoryStub.findByIdWithPessimisticLock).toHaveBeenCalledTimes(1);
+      expect(productRepositoryStub.findByIdWithPessimisticLock).toHaveBeenCalledWith(1, {});
       expect(productRepositoryStub.updateStock).toHaveBeenCalledTimes(1);
       expect(productRepositoryStub.updateStock).toHaveBeenCalledWith(1, 131, {});
     });
 
     it("존재하지 않는 상품에 재고를 1개 추가하면 'PRODUCT_NOT_FOUND' 메시지와 함께 에러 발생❌", async () => {
       // mock & stub settings
-      (productRepositoryStub.findById as jest.Mock).mockResolvedValue(null);
+      (productRepositoryStub.findByIdWithPessimisticLock as jest.Mock).mockResolvedValue(null);
 
       // dto settings
       const command: AddStockCommand = { productId: 10, amount: 1 };
 
       // real service calls & expectactions
       expect(productService.addProductStock(command)).rejects.toThrow("PRODUCT_NOT_FOUND");
-      expect(productRepositoryStub.findById).toHaveBeenCalledTimes(1);
-      expect(productRepositoryStub.findById).toHaveBeenCalledWith(10, {});
+      expect(productRepositoryStub.findByIdWithPessimisticLock).toHaveBeenCalledTimes(1);
+      expect(productRepositoryStub.findByIdWithPessimisticLock).toHaveBeenCalledWith(10, {});
       expect(productRepositoryStub.updateStock).not.toHaveBeenCalled();
     });
 
     it("재고가 1개인 애플 맥세이프 충전기 20W의 재고를 2_147_483_647개 추가하면 'OVER_STOCK_LIMIT' 메시지와 함께 에러 발생❌", async () => {
       // mock & stub settings
-      (productRepositoryStub.findById as jest.Mock).mockResolvedValue(mockProducts[1]);
+      (productRepositoryStub.findByIdWithPessimisticLock as jest.Mock).mockResolvedValue(mockProducts[1]);
 
       // dto settings
       const command: AddStockCommand = { productId: 2, amount: 2_147_483_647 };
 
       // real service calls & expectactions
       expect(productService.addProductStock(command)).rejects.toThrow("OVER_STOCK_LIMIT");
-      expect(productRepositoryStub.findById).toHaveBeenCalledTimes(1);
-      expect(productRepositoryStub.findById).toHaveBeenCalledWith(2, {});
+      expect(productRepositoryStub.findByIdWithPessimisticLock).toHaveBeenCalledTimes(1);
+      expect(productRepositoryStub.findByIdWithPessimisticLock).toHaveBeenCalledWith(2, {});
       expect(productRepositoryStub.updateStock).not.toHaveBeenCalled();
     });
   });
@@ -154,7 +155,7 @@ describe("ProductService", () => {
     it("다이슨 에어랩의 재고를 1개 차감하면 120개의 재고가 남아있어야 함✅", async () => {
       // mock & stub settings
       const updatedProduct = { id: 1, name: "다이슨 에어랩", stock: 120, price: 1200000 };
-      (productRepositoryStub.findById as jest.Mock).mockResolvedValue(mockProducts[0]);
+      (productRepositoryStub.findByIdWithPessimisticLock as jest.Mock).mockResolvedValue(mockProducts[0]);
       (productRepositoryStub.updateStock as jest.Mock).mockResolvedValue(updatedProduct);
 
       // dto settings
@@ -165,44 +166,44 @@ describe("ProductService", () => {
 
       // expectactions
       expect(result.stock).toBe(120);
-      expect(productRepositoryStub.findById).toHaveBeenCalledTimes(1);
-      expect(productRepositoryStub.findById).toHaveBeenCalledWith(1, {});
+      expect(productRepositoryStub.findByIdWithPessimisticLock).toHaveBeenCalledTimes(1);
+      expect(productRepositoryStub.findByIdWithPessimisticLock).toHaveBeenCalledWith(1, {});
       expect(productRepositoryStub.updateStock).toHaveBeenCalledTimes(1);
       expect(productRepositoryStub.updateStock).toHaveBeenCalledWith(1, 120, {});
     });
 
     it("존재하지 않는 상품에 재고를 1개 차감하면 'PRODUCT_NOT_FOUND' 메시지와 함께 에러 발생❌", async () => {
       // mock & stub settings
-      (productRepositoryStub.findById as jest.Mock).mockResolvedValue(null);
+      (productRepositoryStub.findByIdWithPessimisticLock as jest.Mock).mockResolvedValue(null);
 
       // dto settings
       const command: DeductStockCommand = { productId: 10, amount: 1 };
 
       // real service calls & expectactions
       expect(productService.deductProductStock(command)).rejects.toThrow("PRODUCT_NOT_FOUND");
-      expect(productRepositoryStub.findById).toHaveBeenCalledTimes(1);
-      expect(productRepositoryStub.findById).toHaveBeenCalledWith(10, {});
+      expect(productRepositoryStub.findByIdWithPessimisticLock).toHaveBeenCalledTimes(1);
+      expect(productRepositoryStub.findByIdWithPessimisticLock).toHaveBeenCalledWith(10, {});
       expect(productRepositoryStub.updateStock).not.toHaveBeenCalled();
     });
 
     it("재고가 0개인 안경닦이 100x100의 재고를 1개 차감하면 'NOT_ENOUGH_STOCK' 메시지와 함께 에러 발생❌", async () => {
       // mock & stub settings
-      (productRepositoryStub.findById as jest.Mock).mockResolvedValue(mockProducts[3]);
+      (productRepositoryStub.findByIdWithPessimisticLock as jest.Mock).mockResolvedValue(mockProducts[3]);
 
       // dto settings
       const command: DeductStockCommand = { productId: 4, amount: 1 };
 
       // real service calls & expectactions
       expect(productService.deductProductStock(command)).rejects.toThrow("NOT_ENOUGH_STOCK");
-      expect(productRepositoryStub.findById).toHaveBeenCalledTimes(1);
-      expect(productRepositoryStub.findById).toHaveBeenCalledWith(4, {});
+      expect(productRepositoryStub.findByIdWithPessimisticLock).toHaveBeenCalledTimes(1);
+      expect(productRepositoryStub.findByIdWithPessimisticLock).toHaveBeenCalledWith(4, {});
       expect(productRepositoryStub.updateStock).not.toHaveBeenCalled();
     });
   });
 
   describe("deductProductStockBulk", () => {
     it("2개 상품을 각각 3개 씩 재고를 차감하면 차감한 상품들의 총 상품액을 반환함", async () => {
-      (productRepositoryStub.findById as jest.Mock)
+      (productRepositoryStub.findByIdWithPessimisticLock as jest.Mock)
       .mockResolvedValueOnce({ id: 1, productName: "test1", stock: 100, price: 200 })
       .mockResolvedValueOnce({ id: 2, productName: "test2", stock: 20, price: 7 });
 

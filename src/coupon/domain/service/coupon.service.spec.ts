@@ -19,6 +19,7 @@ describe('CouponService', () => {
       findById: jest.fn(),
       addCoupon: jest.fn(),
       deductCoupon: jest.fn(),
+      findByIdWithPessimisticLock: jest.fn(),
     };
     memberCouponRepository = {
       getCouponsByMemberAndCoupon: jest.fn(),
@@ -55,7 +56,7 @@ describe('CouponService', () => {
   describe('issueCoupon', () => {
     it('아직 쿠폰이 없다면 발급할 수 있어야 함 ✅', async () => {
       memberCouponRepository.getCouponsByMemberAndCoupon.mockResolvedValue(null);
-      couponRepository.findById.mockResolvedValue({ id: 1, stock: 5 });
+      couponRepository.findByIdWithPessimisticLock.mockResolvedValue({ id: 1, stock: 5 });
       memberCouponRepository.issueCoupon.mockResolvedValue({ id: 100 });
 
       const result = await service.issueCoupon({ memberId: 1, couponId: 1 });
@@ -101,7 +102,7 @@ describe('CouponService', () => {
 
   describe('addCouponStock', () => {
     it('재고가 남아 있다면 쿠폰 재고를 늘릴 수 있어야 함 ✅', async () => {
-      couponRepository.findById.mockResolvedValue({ id: 1, stock: 10 });
+      couponRepository.findByIdWithPessimisticLock.mockResolvedValue({ id: 1, stock: 10 });
       couponRepository.addCoupon.mockResolvedValue({ id: 1, stock: 11 });
 
       const result = await service.addCouponStock({ couponId: 1 });
@@ -110,7 +111,7 @@ describe('CouponService', () => {
     });
 
     it('재고가 이미 최대라면 더 늘릴 수 없어야 함 ❌', async () => {
-      couponRepository.findById.mockResolvedValue({ id: 1, stock: 2_147_483_647 });
+      couponRepository.findByIdWithPessimisticLock.mockResolvedValue({ id: 1, stock: 2_147_483_647 });
 
       await expect(service.addCouponStock({ couponId: 1 })).rejects.toThrow('OVER_COUPON_STOCK_LIMIT');
     });
@@ -118,7 +119,7 @@ describe('CouponService', () => {
 
   describe('deductCouponStock', () => {
     it('재고가 있다면 쿠폰 재고를 차감할 수 있어야 함 ✅', async () => {
-      couponRepository.findById.mockResolvedValue({ id: 1, stock: 5 });
+      couponRepository.findByIdWithPessimisticLock.mockResolvedValue({ id: 1, stock: 5 });
       couponRepository.deductCoupon.mockResolvedValue({ id: 1, stock: 4 });
 
       const result = await service.deductCouponStock({ couponId: 1 });
@@ -127,7 +128,7 @@ describe('CouponService', () => {
     });
 
     it('재고가 0이라면 쿠폰을 차감하면 안 됨 ❌', async () => {
-      couponRepository.findById.mockResolvedValue({ id: 1, stock: 0 });
+      couponRepository.findByIdWithPessimisticLock.mockResolvedValue({ id: 1, stock: 0 });
 
       await expect(service.deductCouponStock({ couponId: 1 })).rejects.toThrow('NOT_ENOUTH_STOCK');
     });

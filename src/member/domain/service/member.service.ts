@@ -1,15 +1,15 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { BadRequestException, HttpException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { BalanceResult } from "../dto/balance.result.dto";
 import { GetBalanceCommand } from "../dto/get-balance.command.dto";
 import { ChargeBalanceCommand } from "../dto/charge-balance.command.dto";
 import { UseBalanceCommand } from "../dto/use-balance.command.dto";
 import { MemberRepository } from "../../infrastructure/member.repository";
-import { Member } from "../entity/member.entity";
 import { BalanceHisotryRepository } from "../../infrastructure/balanceHistory.repository";
 import { IMEMBER_REPOSITORY } from "../repository/member.repository.interface";
 import { IBALANCE_HISTORY_REPOSITORY } from "../repository/balanceHistory.repository.interface";
 import { TransactionService } from "@app/database/prisma/transaction.service";
-import { Prisma } from "@prisma/client";
+import { Member, Prisma } from "@prisma/client";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 @Injectable()
 export class MemberService {
@@ -27,18 +27,26 @@ export class MemberService {
     return await this.transactionService.executeInTransaction(async (tx) => {
       const client = txc ?? tx;
 
-      const result: Member = await this.memberRepository.findById(memberId, client);
+      try {
+        const result: Member = await this.memberRepository.findById(memberId, client);
 
-      if (result === null) {
-        throw Error("MEMBER_NOT_FOUND");
+        if (result === null) {
+          throw new NotFoundException("MEMBER_NOT_FOUND");
+        }
+
+        const balanceResult: BalanceResult = {
+          memberId: result.id,
+          balance: result.balance,
+        };
+
+        return balanceResult;
+      } catch (error) {
+        if(error instanceof HttpException || error instanceof PrismaClientKnownRequestError) {
+          throw error;
+        } else {
+          throw new Error("보유 잔액 조회 중 예기치 못한 문제가 발생하였습니다. 관리자에게 문의해주세요.")
+        }
       }
-
-      const balanceResult: BalanceResult = {
-        memberId: result.id,
-        balance: result.balance,
-      };
-
-      return balanceResult;
     });
   }
 
@@ -49,23 +57,31 @@ export class MemberService {
     return await this.transactionService.executeInTransaction(async (tx) => {
       const client = txc ?? tx;
 
-      const member: Member = await this.memberRepository.findById(memberId, client);
-      if (member === null) {
-        throw Error("MEMBER_NOT_FOUND");
+      try {
+        const member: Member = await this.memberRepository.findById(memberId, client);
+        if (member === null) {
+          throw new NotFoundException("MEMBER_NOT_FOUND");
+        }
+        if (member.balance + amount > 2_147_483_647) {
+          throw new BadRequestException("OVER_BALANCE_LIMIT");
+        }
+    
+        const result: Member = await this.memberRepository.updateBalanceWithOptimisticLock(memberId, member.balance + amount, member.version, client);
+        await this.balanceHistoryRepository.addHistory(memberId, amount, client);
+    
+        const balanceResult: BalanceResult = {
+          memberId: result.id,
+          balance: result.balance,
+        };
+    
+        return balanceResult;
+      } catch (error) {
+        if(error instanceof HttpException || error instanceof PrismaClientKnownRequestError) {
+          throw error;
+        } else {
+          throw new Error("잔액 충전 중 예기치 못한 문제가 발생하였습니다. 관리자에게 문의해주세요.")
+        }
       }
-      if (member.balance + amount > 2_147_483_647) {
-        throw Error("OVER_BALANCE_LIMIT");
-      }
-  
-      const result: Member = await this.memberRepository.updateBalance(memberId, member.balance + amount, client);
-      await this.balanceHistoryRepository.addHistory(memberId, amount, client);
-  
-      const balanceResult: BalanceResult = {
-        memberId: result.id,
-        balance: result.balance,
-      };
-  
-      return balanceResult;
     });
 
   }
@@ -77,23 +93,31 @@ export class MemberService {
     return await this.transactionService.executeInTransaction(async (tx) => {
       const client = txc ?? tx;
 
-      const member: Member = await this.memberRepository.findById(memberId, client);
-      if (member === null) {
-        throw Error("MEMBER_NOT_FOUND");
+      try {
+        const member: Member = await this.memberRepository.findById(memberId, client);
+        if (member === null) {
+          throw new NotFoundException("MEMBER_NOT_FOUND");
+        }
+        if (member.balance < amount) {
+          throw new BadRequestException("NOT_ENOUTH_BALANCE");
+        }
+    
+        const result: Member = await this.memberRepository.updateBalanceWithOptimisticLock(memberId, member.balance - amount, member.version, client);
+        await this.balanceHistoryRepository.addHistory(memberId, -1 * amount, client);
+    
+        const balanceResult: BalanceResult = {
+          memberId: result.id,
+          balance: result.balance,
+        };
+    
+        return balanceResult;
+      } catch (error) {
+        if(error instanceof HttpException || error instanceof PrismaClientKnownRequestError) {
+          throw error;
+        } else {
+          throw new Error("잔액 사용 중 예기치 못한 문제가 발생하였습니다. 관리자에게 문의해주세요.")
+        }
       }
-      if (member.balance < amount) {
-        throw Error("NOT_ENOUTH_BALANCE");
-      }
-  
-      const result: Member = await this.memberRepository.updateBalance(memberId, member.balance - amount, client);
-      await this.balanceHistoryRepository.addHistory(memberId, -1 * amount, client);
-  
-      const balanceResult: BalanceResult = {
-        memberId: result.id,
-        balance: result.balance,
-      };
-  
-      return balanceResult;
     });
 
   }

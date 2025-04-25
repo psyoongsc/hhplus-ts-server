@@ -69,12 +69,20 @@ describe('ProductSalesStatService Integration Test (with Testcontainers + Prisma
         { productId: 7, productName: "모나미 볼펜 12자루", total_amount: 1000, total_sales: 5900000 },
       ];
       const today = new Date();
-      const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      let todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      todayDate = new Date(todayDate.getTime() + 9 * 60 * 60 * 1000);
       const command: AddProductSalesStatCommand = { salesDate: todayDate, paidProducts };
 
       const result = await productSalesStatService.addProductSalesStat(command);
 
+      const afterStat1 = await prisma.product_Sales_Stat.findUnique({where: {id: 15}});
+      const afterStat2 = await prisma.product_Sales_Stat.findUnique({where: {id: 14}});
+      const afterStat3 = await prisma.product_Sales_Stat.findUnique({where: {id: 16}});
+
       expect(result.total_sales).toBe(7890000);
+      expect(afterStat1.total_amount).toBe(1001);
+      expect(afterStat2.total_amount).toBe(47);
+      expect(afterStat3.total_amount).toBe(1000);
     })
   })
 });

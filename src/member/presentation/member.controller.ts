@@ -34,16 +34,7 @@ export class MemberController {
       memberId,
     };
 
-    try {
-      return await this.memberService.getBalance(command);
-    } catch (error) {
-      switch (error.message) {
-        case "MEMBER_NOT_FOUND":
-          throw new NotFoundException("회원을 찾을 수 없습니다.");
-        default:
-          throw error;
-      }
-    }
+    return await this.memberService.getBalance(command);
   }
 
   @Post("charge")
@@ -58,18 +49,7 @@ export class MemberController {
       ...chargeBalanceReqDto,
     };
 
-    try {
-      return await this.memberService.chargeBalance(command);
-    } catch (error) {
-      switch (error.message) {
-        case "MEMBER_NOT_FOUND":
-          throw new NotFoundException("회원을 찾을 수 없습니다.");
-        case "OVER_BALANCE_LIMIT":
-          throw new BadRequestException("충전 후 잔액이 충전 가능 금액 2_147_483_647원을 초과합니다.");
-        default:
-          throw error;
-      }
-    }
+    return await this.memberService.chargeBalance(command);
   }
 
   @Post("use")
@@ -82,17 +62,6 @@ export class MemberController {
       ...useBalanceReqDto,
     };
 
-    try {
-      return await this.memberService.chargeBalance(command);
-    } catch (error) {
-      switch (error.message) {
-        case "MEMBER_NOT_FOUND":
-          throw new NotFoundException("회원을 찾을 수 없습니다.");
-        case "NOT_ENOUTH_BALANCE":
-          throw new BadRequestException("사용 할 수 있는 잔액이 충분하지 않습니다.");
-        default:
-          throw error;
-      }
-    }
+    return await this.memberService.chargeBalance(command);
   }
 }

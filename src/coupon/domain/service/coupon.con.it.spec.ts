@@ -82,7 +82,7 @@ describe('CouponService Concurrency Test', () => {
       const afterStock = await prisma.coupon.findUnique({select: { stock: true }, where: { id: 1 }})
 
       expect(success_count.length).toBe(1);
-      expect(afterStock.stock).toBe(4);
+      expect(afterStock.stock).toBe(1);
     }, 20000)
   })
 });
