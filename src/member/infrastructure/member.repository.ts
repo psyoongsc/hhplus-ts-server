@@ -32,7 +32,7 @@ export class MemberRepository extends PrismaRepository<Member> implements IMembe
       })
 
       if (updated.count === 1) {
-        return updated[0];
+        return await this.findById(id, tx);
       }
     }
 
