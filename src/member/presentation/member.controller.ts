@@ -62,6 +62,6 @@ export class MemberController {
       ...useBalanceReqDto,
     };
 
-    return await this.memberService.chargeBalance(command);
+    return await this.memberService.useBalance(command);
   }
 }
