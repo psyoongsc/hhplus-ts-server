@@ -68,10 +68,10 @@ describe('ProductSalesStatService Concurrency Test', () => {
       ])
 
       const afterStat1 = await prisma.product_Sales_Stat.findUnique({select: {total_amount: true}, where: {id: 1}});
-      const afterStat2 = await prisma.product_Sales_Stat.findUnique({select: {total_amount: true}, where: {id: 2}});
+      const afterStat2 = await prisma.product_Sales_Stat.findMany({select: {total_amount: true}, where: {productId: 1}});
 
       expect(afterStat1.total_amount).toBe(30);
-      expect(afterStat2.total_amount).toBe(25);
+      expect(afterStat2[0].total_amount).toBe(25);
     })
   })
 });

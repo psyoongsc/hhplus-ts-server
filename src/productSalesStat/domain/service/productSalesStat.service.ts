@@ -57,7 +57,7 @@ export class ProductSalesStatService {
       try {
         let total_paidSales = 0;
         for (const paidProduct of paidProducts) {
-          const productStat: Product_Sales_Stat[] = await this.productSalesStatRepository.findStatWithPessimisticLock(salesDate, paidProduct.productId, tx);
+          const productStat: Product_Sales_Stat[] = await this.productSalesStatRepository.findStatWithPessimisticLock(salesDate, paidProduct.productId, client);
           if (productStat.length == 0) {
             await this.productSalesStatRepository.create({ salesDate, ...paidProduct }, client);
           } else {

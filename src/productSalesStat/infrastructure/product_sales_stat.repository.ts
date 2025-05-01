@@ -20,8 +20,8 @@ export class ProductSalesStatRepository
       .toISOString()
       .split("T")[0];
 
-    const result = await client.$queryRaw<Product_Sales_Stat[]>`
-      SELECT * FROM Product_Sales_Stat WHERE salesDate=${salesDateString} AND productId=${productId} FOR UPDATE;`;
+    const result = await client.$queryRawUnsafe<Product_Sales_Stat[]>(`
+      SELECT * FROM Product_Sales_Stat WHERE salesDate='${salesDateString}' AND productId=${productId} FOR UPDATE;`);
 
     return result;
   }
