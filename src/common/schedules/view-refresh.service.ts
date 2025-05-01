@@ -26,19 +26,23 @@ export class ViewRefreshService {
     try {
       await this.prisma.$executeRawUnsafe(`
         SELECT 
-          ${this.formatDateToYMD(today)} AS date,
+          '${this.formatDateToYMD(today)}' AS date,
           RANK() OVER (ORDER BY SUM(total_amount) DESC) AS \`rank\`,
           productId,
           productName,
-          SUM(total_amount),
-          SUM(total_sales)
+          SUM(total_amount) AS total_amount,
+          SUM(total_sales) AS total_sales
         FROM Product_Sales_Stat
-        WHERE salesDate >= ${this.formatDateToYMD(before3days)} AND salesDate < ${this.formatDateToYMD(today)}
+        WHERE salesDate >= '${this.formatDateToYMD(before3days)}' 
+          AND salesDate < '${this.formatDateToYMD(today)}'
         GROUP BY productId, productName
-        ORDER BY total_amount DESC
-        LIMIT 5`)
+        ORDER BY SUM(total_amount) DESC
+        LIMIT 5
+      `)
     } catch (error) {
       this.logger.error('View 갱신 실패', error)
+    } finally {
+      this.logger.log('View 갱신 완료');
     }
   }
 }
