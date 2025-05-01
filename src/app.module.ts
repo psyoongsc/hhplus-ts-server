@@ -9,6 +9,7 @@ import { ScheduleModule } from "@nestjs/schedule";
 import { ViewRefreshService } from "./common/schedules/view-refresh.service";
 import { APP_INTERCEPTOR } from "@nestjs/core";
 import { DuplicateRequestInterceptor } from "./common/interceptors/duplicate-request.interceptor";
+import { RedisModule } from "./redis/redis.module";
 
 @Module({
   imports: [
@@ -18,7 +19,8 @@ import { DuplicateRequestInterceptor } from "./common/interceptors/duplicate-req
     OrderModule, 
     ProductSalesStatModule, 
     PaymentModule,
-    ScheduleModule.forRoot()
+    ScheduleModule.forRoot(),
+    RedisModule
   ],
   providers: [
     ViewRefreshService,
