@@ -9,10 +9,14 @@ import { GetProductCommand } from '../dto/get-product.command.dto';
 import { AddStockCommand } from '../dto/add-stock.command.dto';
 import { DeductStockCommand } from '../dto/deduct-stock.command.dto';
 import { TransactionService } from '@app/database/prisma/transaction.service';
+import { RedisService } from '@app/redis/redis.service';
+import { DistributedLockService } from '@app/redis/redisDistributedLock.service';
 
 describe('ProductService Integration Test (with Testcontainers + Prisma)', () => {
   let productService: ProductService;
   let prisma: PrismaService;
+  let lockService: DistributedLockService;
+  let redis: RedisService;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -24,12 +28,23 @@ describe('ProductService Integration Test (with Testcontainers + Prisma)', () =>
           provide: IPRODUCT_REPOSITORY,
           useClass: ProductRepository,
         },
+        RedisService,
+        DistributedLockService
       ],
     }).compile();
 
     productService = module.get<ProductService>(ProductService);
     prisma = module.get<PrismaService>(PrismaService);
+
+    lockService = module.get<DistributedLockService>(DistributedLockService);
+    (productService as any).lockService = lockService;
+    redis = module.get<RedisService>(RedisService);
+    redis.onModuleInit();
   });
+
+  afterAll(async() => {
+    redis.onModuleDestroy();
+  })
 
   beforeEach(async () => {
     const importSqlPath = path.resolve(__dirname, 'integration-test-util/import.sql');

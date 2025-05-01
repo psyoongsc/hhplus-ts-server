@@ -11,9 +11,10 @@ import { ProductSalesStatModule } from "@app/productSalesStat/productSalesStat.m
 import { PaymentFacade } from "./application/payment.facade";
 import { PrismaClient } from "@prisma/client";
 import { CouponModule } from "@app/coupon/coupon.module";
+import { RedisModule } from "@app/redis/redis.module";
 
 @Module({
-  imports: [PrismaModule, MemberModule, OrderModule, ProductModule, CouponModule, ProductSalesStatModule],
+  imports: [PrismaModule, MemberModule, OrderModule, ProductModule, CouponModule, ProductSalesStatModule, RedisModule],
   controllers: [PaymentController],
   providers: [
     PaymentService,

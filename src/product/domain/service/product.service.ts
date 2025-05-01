@@ -8,6 +8,8 @@ import { Prisma, Product } from "@prisma/client";
 import { IPRODUCT_REPOSITORY } from "../repository/product.repository.interface";
 import { TransactionService } from "@app/database/prisma/transaction.service";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { DistributedMultiLockWithArray } from "@app/redis/redisDistributedLock.decorator";
+import { DistributedLockService } from "@app/redis/redisDistributedLock.service";
 
 @Injectable()
 export class ProductService {
@@ -15,6 +17,7 @@ export class ProductService {
     @Inject(IPRODUCT_REPOSITORY)
     protected readonly productRepository: ProductRepository,
     private readonly transactionService: TransactionService,
+    private readonly lockService: DistributedLockService,
   ) {}
 
   async getAllProducts(txc?: Prisma.TransactionClient): Promise<ProductResult[]> {
@@ -115,6 +118,7 @@ export class ProductService {
     });
   }
 
+  @DistributedMultiLockWithArray((commands: DeductStockCommand[]) => commands.map((command) => `lock:product:${command.productId}`))
   async deductProductStockBulk(commands: DeductStockCommand[], txc?: Prisma.TransactionClient): Promise<number> {
     return await this.transactionService.executeInTransaction(async (tx) => {
       const client = txc ?? tx;
@@ -132,6 +136,30 @@ export class ProductService {
           throw error;
         } else {
           throw new Error("상품 재고 차감 중 예기치 못한 문제가 발생하였습니다. 관리자에게 문의해주세요.")
+        }
+      }
+    });
+  }
+
+  @DistributedMultiLockWithArray((commands: DeductStockCommand[]) => commands.map((command) => `lock:product:${command.productId}`))
+  async deductProductStockBulk_rollback(commands: DeductStockCommand[], txc?: Prisma.TransactionClient): Promise<number> {
+    return await this.transactionService.executeInTransaction(async (tx) => {
+      const client = txc ?? tx;
+
+      try {
+        let result = 0;
+        for(const command of commands) {
+          const addStockCommand: AddStockCommand = { productId: command.productId, amount: command.amount }
+          const addedProduct = await this.addProductStock(addStockCommand, client);
+          result += addedProduct.price * command.amount;
+        }
+
+        return result;
+      } catch (error) {
+        if(error instanceof HttpException || error instanceof PrismaClientKnownRequestError) {
+          throw error;
+        } else {
+          throw new Error("상품 재고 차감에 대한 롤백 중 예기치 못한 문제가 발생하였습니다. 관리자에게 문의해주세요.")
         }
       }
     });
