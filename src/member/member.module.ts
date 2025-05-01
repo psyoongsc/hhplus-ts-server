@@ -6,9 +6,10 @@ import { PrismaModule } from "@app/database/prisma/prisma.module";
 import { BalanceHisotryRepository } from "./infrastructure/balanceHistory.repository";
 import { IMEMBER_REPOSITORY } from "./domain/repository/member.repository.interface";
 import { IBALANCE_HISTORY_REPOSITORY } from "./domain/repository/balanceHistory.repository.interface";
+import { RedisModule } from "@app/redis/redis.module";
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, RedisModule],
   controllers: [MemberController],
   providers: [
     MemberService,
