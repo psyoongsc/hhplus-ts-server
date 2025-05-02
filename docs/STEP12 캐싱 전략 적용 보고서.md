@@ -131,9 +131,9 @@
 
 ### 1-1. Non-Cache(위) VS Cache(아래)
 
-![image.png](STEP12%20%E1%84%8F%E1%85%A2%E1%84%89%E1%85%B5%E1%86%BC%20%E1%84%8C%E1%85%A5%E1%86%AB%E1%84%85%E1%85%A3%E1%86%A8%20%E1%84%8C%E1%85%A5%E1%86%A8%E1%84%8B%E1%85%AD%E1%86%BC%20%E1%84%87%E1%85%A9%E1%84%80%E1%85%A9%E1%84%89%E1%85%A5%201e6f56acc0e1801ab720cd578fdcb699/image.png)
+<img width="1902" alt="image" src="https://github.com/user-attachments/assets/a813e5c6-2f3a-4f6e-bd82-bbaa52b6654a" />
 
-![image.png](STEP12%20%E1%84%8F%E1%85%A2%E1%84%89%E1%85%B5%E1%86%BC%20%E1%84%8C%E1%85%A5%E1%86%AB%E1%84%85%E1%85%A3%E1%86%A8%20%E1%84%8C%E1%85%A5%E1%86%A8%E1%84%8B%E1%85%AD%E1%86%BC%20%E1%84%87%E1%85%A9%E1%84%80%E1%85%A9%E1%84%89%E1%85%A5%201e6f56acc0e1801ab720cd578fdcb699/image%201.png)
+<img width="1905" alt="image 1" src="https://github.com/user-attachments/assets/6e0b8983-e80e-49ed-81ab-ee3a7d97e63e" />
 
 ### 1-2. 성능 비교
 
@@ -184,11 +184,11 @@
 
 ### 2. 초당 요청 수 5000으로 재실험
 
-### 2-1. Non-Cache VS Cache
+### 2-1. Non-Cache(위) VS Cache(아래)
 
-![image.png](STEP12%20%E1%84%8F%E1%85%A2%E1%84%89%E1%85%B5%E1%86%BC%20%E1%84%8C%E1%85%A5%E1%86%AB%E1%84%85%E1%85%A3%E1%86%A8%20%E1%84%8C%E1%85%A5%E1%86%A8%E1%84%8B%E1%85%AD%E1%86%BC%20%E1%84%87%E1%85%A9%E1%84%80%E1%85%A9%E1%84%89%E1%85%A5%201e6f56acc0e1801ab720cd578fdcb699/image%202.png)
+<img width="1901" alt="image 2" src="https://github.com/user-attachments/assets/33bb874a-d416-40a5-ac89-ea7599af1b1f" />
 
-![image.png](STEP12%20%E1%84%8F%E1%85%A2%E1%84%89%E1%85%B5%E1%86%BC%20%E1%84%8C%E1%85%A5%E1%86%AB%E1%84%85%E1%85%A3%E1%86%A8%20%E1%84%8C%E1%85%A5%E1%86%A8%E1%84%8B%E1%85%AD%E1%86%BC%20%E1%84%87%E1%85%A9%E1%84%80%E1%85%A9%E1%84%89%E1%85%A5%201e6f56acc0e1801ab720cd578fdcb699/image%203.png)
+<img width="1908" alt="image 3" src="https://github.com/user-attachments/assets/941ea43c-f2bd-426d-a611-d6e84a9aff4c" />
 
 ### 2-2. 성능 비교
 
