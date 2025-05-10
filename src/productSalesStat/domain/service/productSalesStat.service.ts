@@ -9,6 +9,7 @@ import { TransactionService } from "@app/database/prisma/transaction.service";
 import { IPRODUCT_SALES_STAT_VIEW_REPOSITORY } from "../repository/product_sales_stat_view.interface.repository";
 import { ProductSalesStatViewRepository } from "@app/productSalesStat/infrastructure/product_sales_stat_view.repository";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { CacheService } from "@app/redis/redisCache.service";
 
 @Injectable()
 export class ProductSalesStatService {
@@ -18,6 +19,7 @@ export class ProductSalesStatService {
     // @Inject(IPRODUCT_SALES_STAT_VIEW_REPOSITORY)
     // protected readonly productSalesStatViewRepository: ProductSalesStatViewRepository,
     private readonly transactionService: TransactionService,
+    private readonly cacheService: CacheService
   ) {}
 
   async getPopularProducts(txc?: Prisma.TransactionClient): Promise<ProductSalesStatResult[]> {
@@ -25,10 +27,20 @@ export class ProductSalesStatService {
       const client = txc ?? tx;
 
       try {
-        const result = await this.productSalesStatRepository.getTop5ProductByAmountLast3Days(client);
-        const formatted = result.map(r => ({ ...r, rank: Number(r.rank), amount: Number(r.amount), sales: Number(r.sales) }));
+        const lockKey = `popularProducts`
+        const ttl = 24 * 60 * 60;
+        return this.cacheService.getOrSetArray(
+          lockKey,
+          ProductSalesStatResult,
+          ttl,
+          async() => {
+            const result = await this.productSalesStatRepository.getTop5ProductByAmountLast3Days(client);
+            const formatted = result.map(r => ({ ...r, rank: Number(r.rank), amount: Number(r.amount), sales: Number(r.sales) }));
 
-        return formatted;
+            return formatted;
+          }
+        )
+
       } catch (error) {
         if(error instanceof HttpException || error instanceof PrismaClientKnownRequestError) {
           throw error;

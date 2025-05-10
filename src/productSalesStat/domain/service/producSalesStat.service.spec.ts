@@ -3,11 +3,13 @@ import { ProductSalesStatService } from "./productSalesStat.service";
 import { AddProductSalesStatCommand, PaidProduct } from "../dto/add-product-sales-stat.command.dto";
 import { IPRODUCT_SALES_STAT_REPOSITORY } from "../repository/product_sales_stat.interface.repository";
 import { TransactionService } from "@app/database/prisma/transaction.service";
+import { CacheService } from "@app/redis/redisCache.service";
 
 describe("ProductSalesStatService", () => {
   let productSalesStatService: ProductSalesStatService;
   let transactionStub: any;
   let productSalesStatRepositoryStub: any;
+  let cacheService: any;
 
   let mockPopularProducts = [
     { rank: 1, productId: 2, productName: "애플 맥세이프 충전기 20W", amount: 700, sales: 55300000 },
@@ -34,12 +36,16 @@ describe("ProductSalesStatService", () => {
         $transaction: jest.fn((cb) => cb({})),
       }
     };
+    cacheService = {
+      getOrSetArray: jest.fn(),
+    }
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProductSalesStatService,
         { provide: TransactionService, useValue: transactionStub },
         { provide: IPRODUCT_SALES_STAT_REPOSITORY, useValue: productSalesStatRepositoryStub },
+        { provide: CacheService, useValue: cacheService },
       ],
     }).compile();
 
@@ -56,6 +62,9 @@ describe("ProductSalesStatService", () => {
       (productSalesStatRepositoryStub.getTop5ProductByAmountLast3Days as jest.Mock).mockResolvedValue(
         mockPopularProducts,
       );
+      (cacheService.getOrSetArray as jest.Mock).mockImplementation(async (_key, _dto, _ttl, fetcherFn) => {
+        return fetcherFn(); // fetcher 직접 호출
+      });
 
       // real service calls
       const result = await productSalesStatService.getPopularProducts();

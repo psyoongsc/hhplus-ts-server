@@ -7,10 +7,14 @@ import { ProductSalesStatService } from './productSalesStat.service';
 import { IPRODUCT_SALES_STAT_REPOSITORY } from '../repository/product_sales_stat.interface.repository';
 import { ProductSalesStatRepository } from '@app/productSalesStat/infrastructure/product_sales_stat.repository';
 import { AddProductSalesStatCommand, PaidProduct } from '../dto/add-product-sales-stat.command.dto';
+import { CacheService } from '@app/redis/redisCache.service';
+import { RedisService } from '@app/redis/redis.service';
 
 describe('ProductSalesStatService Integration Test (with Testcontainers + Prisma)', () => {
   let productSalesStatService: ProductSalesStatService;
   let prisma: PrismaService;
+  let cacheService: CacheService;
+  let redis: RedisService;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -22,12 +26,22 @@ describe('ProductSalesStatService Integration Test (with Testcontainers + Prisma
           provide: IPRODUCT_SALES_STAT_REPOSITORY,
           useClass: ProductSalesStatRepository,
         },
+        RedisService,
+        CacheService
       ],
     }).compile();
 
     productSalesStatService = module.get<ProductSalesStatService>(ProductSalesStatService);
     prisma = module.get<PrismaService>(PrismaService);
+    cacheService = module.get<CacheService>(CacheService);
+
+    redis = module.get<RedisService>(RedisService);
+    redis.onModuleInit();
   });
+
+  afterAll(async() => {
+    redis.onModuleDestroy();
+  })
 
   beforeEach(async () => {
     const importSqlPath = path.resolve(__dirname, 'integration-test-util/import.sql');
@@ -43,6 +57,7 @@ describe('ProductSalesStatService Integration Test (with Testcontainers + Prisma
 
   afterEach(async() => {
     await prisma.product_Sales_Stat.deleteMany({});
+    await cacheService.flushAll();
   })
 
   describe("getPopularProducts", () => {
