@@ -7,11 +7,13 @@ import { AddStockCommand } from "../dto/add-stock.command.dto";
 import { DeductStockCommand } from "../dto/deduct-stock.command.dto";
 import { IPRODUCT_REPOSITORY } from "../repository/product.repository.interface";
 import { TransactionService } from "@app/database/prisma/transaction.service";
+import { DistributedLockService } from "@app/redis/redisDistributedLock.service";
 
 describe("ProductService", () => {
   let productService: ProductService;
   let transactionStub: any;
   let productRepositoryStub: any;
+  let lockServiceStub: any;
 
   let mockProducts: Product[] = [
     { id: 1, name: "다이슨 에어랩", stock: 121, price: 1200000 },
@@ -40,12 +42,17 @@ describe("ProductService", () => {
         $transaction: jest.fn((cb) => cb({})),
       }
     };
+    lockServiceStub = {
+      acquireMultiLockWithWait: jest.fn(),
+      releaseLock: jest.fn(),
+    }
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProductService, 
         { provide: TransactionService, useValue: transactionStub },
-        { provide: IPRODUCT_REPOSITORY, useValue: productRepositoryStub }
+        { provide: IPRODUCT_REPOSITORY, useValue: productRepositoryStub },
+        { provide: DistributedLockService, useValue: lockServiceStub }
       ],
     }).compile();
 

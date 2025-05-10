@@ -6,9 +6,10 @@ import { ProductSalesStatRepository } from "./infrastructure/product_sales_stat.
 import { IPRODUCT_SALES_STAT_REPOSITORY } from "./domain/repository/product_sales_stat.interface.repository";
 import { IPRODUCT_SALES_STAT_VIEW_REPOSITORY } from "./domain/repository/product_sales_stat_view.interface.repository";
 import { ProductSalesStatViewRepository } from "./infrastructure/product_sales_stat_view.repository";
+import { RedisModule } from "@app/redis/redis.module";
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, RedisModule],
   controllers: [ProductSalesStatController],
   providers: [
     ProductSalesStatService,

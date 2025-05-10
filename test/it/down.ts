@@ -4,4 +4,9 @@ export default async () => {
     await globalThis.__DB_CONTAINER__.stop();
     console.log('🧹 MySQL TestContainer stopped');
   }
+
+  if(globalThis.__REDIS_CONTAINER__) {
+    await globalThis.__REDIS_CONTAINER__.stop();
+    console.log('🧹 Redis TestContainer stopped');
+  }
 };

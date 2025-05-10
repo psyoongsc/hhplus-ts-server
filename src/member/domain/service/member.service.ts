@@ -10,6 +10,7 @@ import { IBALANCE_HISTORY_REPOSITORY } from "../repository/balanceHistory.reposi
 import { TransactionService } from "@app/database/prisma/transaction.service";
 import { Member, Prisma } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { CacheService } from "@app/redis/redisCache.service";
 
 @Injectable()
 export class MemberService {
@@ -19,6 +20,7 @@ export class MemberService {
     @Inject(IBALANCE_HISTORY_REPOSITORY)
     private readonly balanceHistoryRepository: BalanceHisotryRepository,
     private readonly transactionService: TransactionService,
+    private readonly cacheService: CacheService,
   ) {}
 
   async getBalance(command: GetBalanceCommand, txc?: Prisma.TransactionClient): Promise<BalanceResult> {
@@ -28,18 +30,28 @@ export class MemberService {
       const client = txc ?? tx;
 
       try {
-        const result: Member = await this.memberRepository.findById(memberId, client);
+        const cacheKey = `member:${memberId}`;
+        const ttl = 300;
 
-        if (result === null) {
-          throw new NotFoundException("MEMBER_NOT_FOUND");
-        }
+        return this.cacheService.getOrSet(
+          cacheKey,
+          BalanceResult,
+          ttl,
+          async() => {
+            const result: Member = await this.memberRepository.findById(memberId, client);
 
-        const balanceResult: BalanceResult = {
-          memberId: result.id,
-          balance: result.balance,
-        };
-
-        return balanceResult;
+            if (result === null) {
+              throw new NotFoundException("MEMBER_NOT_FOUND");
+            }
+    
+            const balanceResult: BalanceResult = {
+              memberId: result.id,
+              balance: result.balance,
+            };
+    
+            return balanceResult;
+          }
+        );
       } catch (error) {
         if(error instanceof HttpException || error instanceof PrismaClientKnownRequestError) {
           throw error;
@@ -73,6 +85,10 @@ export class MemberService {
           memberId: result.id,
           balance: result.balance,
         };
+
+        const cacheKey = `member:${memberId}`;
+        const ttl = 300;
+        await this.cacheService.refresh(cacheKey, BalanceResult, balanceResult, ttl)
     
         return balanceResult;
       } catch (error) {
@@ -109,6 +125,10 @@ export class MemberService {
           memberId: result.id,
           balance: result.balance,
         };
+
+        const cacheKey = `member:${memberId}`;
+        const ttl = 300;
+        await this.cacheService.refresh(cacheKey, BalanceResult, balanceResult, ttl)
     
         return balanceResult;
       } catch (error) {

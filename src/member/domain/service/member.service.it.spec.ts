@@ -11,10 +11,14 @@ import { ChargeBalanceCommand } from '../dto/charge-balance.command.dto';
 import { GetBalanceCommand } from '../dto/get-balance.command.dto';
 import { UseBalanceCommand } from '../dto/use-balance.command.dto';
 import { TransactionService } from '@app/database/prisma/transaction.service';
+import { CacheService } from '@app/redis/redisCache.service';
+import { RedisService } from '@app/redis/redis.service';
 
 describe('MemberService Integration Test (with Testcontainers + Prisma)', () => {
   let memberService: MemberService;
   let prisma: PrismaService;
+  let cacheService: CacheService;
+  let redis: RedisService;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -30,12 +34,22 @@ describe('MemberService Integration Test (with Testcontainers + Prisma)', () => 
           provide: IBALANCE_HISTORY_REPOSITORY,
           useClass: BalanceHisotryRepository,
         },
+        RedisService,
+        CacheService
       ],
     }).compile();
 
     memberService = module.get<MemberService>(MemberService);
     prisma = module.get<PrismaService>(PrismaService);
+    cacheService = module.get<CacheService>(CacheService);
+
+    redis = module.get<RedisService>(RedisService);
+    redis.onModuleInit();
   });
+
+  afterAll(async() => {
+    redis.onModuleDestroy();
+  })
 
   beforeEach(async () => {
     const importSqlPath = path.resolve(__dirname, 'integration-test-util/import.sql');
@@ -52,6 +66,7 @@ describe('MemberService Integration Test (with Testcontainers + Prisma)', () => 
   afterEach(async() => {
     await prisma.balance_History.deleteMany({});
     await prisma.member.deleteMany({});
+    await cacheService.flushAll();
   })
 
   describe("getBalance", () => {

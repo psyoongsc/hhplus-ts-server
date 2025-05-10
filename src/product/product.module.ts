@@ -4,9 +4,10 @@ import { ProductController } from "./presentation/product.controller";
 import { PrismaModule } from "@app/database/prisma/prisma.module";
 import { ProductRepository } from "./infrastructure/product.repository";
 import { IPRODUCT_REPOSITORY } from "./domain/repository/product.repository.interface";
+import { RedisModule } from "@app/redis/redis.module";
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, RedisModule],
   controllers: [ProductController],
   providers: [
     ProductService,
