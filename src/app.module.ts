@@ -10,6 +10,7 @@ import { ViewRefreshService } from "./common/schedules/view-refresh.service";
 import { APP_INTERCEPTOR } from "@nestjs/core";
 import { DuplicateRequestInterceptor } from "./common/interceptors/duplicate-request.interceptor";
 import { RedisModule } from "./redis/redis.module";
+import { SalesStatScheduler } from "./common/schedules/salesStats.scheduler.service";
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { RedisModule } from "./redis/redis.module";
   ],
   providers: [
     ViewRefreshService,
+    SalesStatScheduler,
     {
       provide: APP_INTERCEPTOR,
       useClass: DuplicateRequestInterceptor,
