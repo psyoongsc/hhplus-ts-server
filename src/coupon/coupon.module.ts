@@ -8,12 +8,19 @@ import { MemberCouponRepository } from "./infrastructure/member_coupon.repositor
 import { PrismaModule } from "@app/database/prisma/prisma.module";
 import { IMEMBER_COUPON_INDEX_REPOSITORY } from "./domain/repository/member_coupon_index.repository.interface";
 import { MemberCouponIndexRepository } from "./infrastructure/member_coupon_index.repository";
+import { RedisModule } from "@app/redis/redis.module";
+import { CouponRedisService } from "./domain/service/coupon.redis.service";
+import { CouponSchedulerService } from "./domain/service/coupon.scheduler.service";
+import { ICOUPON_REDIS_REPOSITORY } from "./domain/repository/coupon.redis.repository.interface";
+import { CouponRedisRepository } from "./infrastructure/coupon.redis.repository";
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, RedisModule],
   controllers: [CouponController],
   providers: [
     CouponService,
+    CouponRedisService,
+    CouponSchedulerService,
     {
       provide: ICOUPON_REPOSITORY,
       useClass: CouponRepository
@@ -22,11 +29,15 @@ import { MemberCouponIndexRepository } from "./infrastructure/member_coupon_inde
       provide: IMEMBER_COUPON_REPOSITORY,
       useClass: MemberCouponRepository
     },
+    {
+      provide: ICOUPON_REDIS_REPOSITORY,
+      useClass: CouponRedisRepository
+    },
     // {
     //   provide: IMEMBER_COUPON_INDEX_REPOSITORY,
     //   useClass: MemberCouponIndexRepository
     // }
   ],
-  exports: [CouponService],
+  exports: [CouponService, CouponRedisService],
 })
 export class CouponModule {}
