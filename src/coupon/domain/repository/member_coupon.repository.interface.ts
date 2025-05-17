@@ -4,6 +4,7 @@ import { Member_Coupon, Prisma } from "@prisma/client";
 export interface IMemberCouponRepository extends IRepository<Member_Coupon> {
   issueCoupon(memberId: number, couponId: number, tx?: Prisma.TransactionClient): Promise<Member_Coupon>;
   useCoupon(memberId: number, couponId: number, tx?: Prisma.TransactionClient): Promise<Member_Coupon>;
+  useCouponV2(memberId: number, couponId: number, tx?: Prisma.TransactionClient): Promise<Member_Coupon>;
   getCouponById(couponId: number, tx?: Prisma.TransactionClient): Promise<Member_Coupon>;
   getCouponsByMember(memberId: number, tx?: Prisma.TransactionClient): Promise<Member_Coupon[]>;
   getCouponsByMemberAndCoupon(memberId: number, couponId: number, tx?: Prisma.TransactionClient): Promise<Member_Coupon>;

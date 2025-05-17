@@ -59,4 +59,17 @@ export class CouponRepository extends PrismaRepository<Coupon> implements ICoupo
       }
     })
   }
+
+  async updateCouponStock(couponId: number, stock: number, tx?: Prisma.TransactionClient): Promise<Coupon> {
+    const client = tx ?? this.prisma;
+
+    const coupon = await this.findById(couponId, client);
+    return await this.updateById(
+      couponId, 
+      {
+        stock
+      }, 
+      client
+    )
+  }
 }

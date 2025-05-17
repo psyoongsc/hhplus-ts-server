@@ -33,6 +33,12 @@ export class MemberCouponRepository extends PrismaRepository<Member_Coupon> impl
     })
   }
 
+  async useCouponV2(memberId: number, couponId: number, tx?: Prisma.TransactionClient): Promise<Member_Coupon> {
+    const client = tx ?? this.prisma;
+
+    return await this.create({ memberId, couponId, isUsed: true }, client);
+  }
+
   async getCouponById(couponId: number, tx?: Prisma.TransactionClient) {
     const client = tx ?? this.prisma;
 
