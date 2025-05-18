@@ -11,6 +11,8 @@ import { APP_INTERCEPTOR } from "@nestjs/core";
 import { DuplicateRequestInterceptor } from "./common/interceptors/duplicate-request.interceptor";
 import { RedisModule } from "./redis/redis.module";
 import { SalesStatScheduler } from "./common/schedules/salesStats.scheduler.service";
+import { EventEmitterModule } from "@nestjs/event-emitter";
+import { NotifyModule } from "./notify/notify.module";
 
 @Module({
   imports: [
@@ -21,7 +23,9 @@ import { SalesStatScheduler } from "./common/schedules/salesStats.scheduler.serv
     ProductSalesStatModule, 
     PaymentModule,
     ScheduleModule.forRoot(),
-    RedisModule
+    RedisModule,
+    EventEmitterModule.forRoot(),
+    NotifyModule,
   ],
   providers: [
     ViewRefreshService,
