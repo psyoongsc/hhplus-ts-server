@@ -24,6 +24,7 @@ import { DistributedLockService } from "@app/redis/redisDistributedLock.service"
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { PayCompletedEvent } from "@app/common/events/pay-completed.event";
+import { EventBus } from "@nestjs/cqrs";
 
 @Injectable()
 export class PaymentFacade {
@@ -36,7 +37,8 @@ export class PaymentFacade {
     private readonly couponService: CouponService,
     private readonly productSalesStatService: ProductSalesStatService,
     private readonly lockService: DistributedLockService,
-    private readonly eventEmitter: EventEmitter2
+    private readonly eventEmitter: EventEmitter2,
+    private readonly eventBus: EventBus
   ) {}
 
   @DistributedMultiLock([
@@ -102,6 +104,7 @@ export class PaymentFacade {
 
         const event: PayCompletedEvent = { order };
         this.eventEmitter.emit('pay.completed', event);
+        this.eventBus.publish(new PayCompletedEvent(order));
 
         return payment;
       } catch(error) {
