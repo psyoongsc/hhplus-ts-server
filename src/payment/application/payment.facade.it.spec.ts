@@ -15,6 +15,7 @@ import { CouponModule } from '@app/coupon/coupon.module';
 import { ProductSalesStatModule } from '@app/productSalesStat/productSalesStat.module';
 import { RedisService } from '@app/redis/redis.service';
 import { DistributedLockService } from '@app/redis/redisDistributedLock.service';
+import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 
 describe('PaymentFacade Integration Test (with Testcontainers + Prisma)', () => {
   let module: TestingModule;
@@ -23,6 +24,7 @@ describe('PaymentFacade Integration Test (with Testcontainers + Prisma)', () => 
   let transactionService: TransactionService;
   let lockService: DistributedLockService;
   let redis: RedisService;
+  let eventEmitter: EventEmitter2;
 
   beforeAll(async () => {
     jest.setTimeout(30000);
@@ -33,7 +35,8 @@ describe('PaymentFacade Integration Test (with Testcontainers + Prisma)', () => 
         OrderModule, 
         ProductModule, 
         CouponModule, 
-        ProductSalesStatModule
+        ProductSalesStatModule,
+        EventEmitterModule.forRoot()
       ],
       providers: [
         PrismaService,
@@ -45,7 +48,7 @@ describe('PaymentFacade Integration Test (with Testcontainers + Prisma)', () => 
           useClass: PaymentRepository,
         },
         RedisService,
-        DistributedLockService
+        DistributedLockService,
       ],
     }).compile();
 
@@ -57,6 +60,8 @@ describe('PaymentFacade Integration Test (with Testcontainers + Prisma)', () => 
     (paymentFacade as any).lockService = lockService;
     redis = module.get<RedisService>(RedisService);
     redis.onModuleInit();
+
+    eventEmitter = module.get<EventEmitter2>(EventEmitter2);
   });
 
   afterAll(async() => {
@@ -95,6 +100,8 @@ describe('PaymentFacade Integration Test (with Testcontainers + Prisma)', () => 
         couponId: 1
       }
 
+      const emitSpy = jest.spyOn(eventEmitter, 'emit');
+
       const result = await paymentFacade.processPayment(processPaymentReqDto);
 
       const afterMember = await prisma.member.findUnique({
@@ -120,6 +127,12 @@ describe('PaymentFacade Integration Test (with Testcontainers + Prisma)', () => 
       expect(afterProducts[2].stock).toBe(5);
 
       expect(afterOrder.status).toBe("결제완료")
+
+      expect(emitSpy).toHaveBeenCalledWith('pay.completed', expect.objectContaining({
+        order: expect.objectContaining({
+          id: processPaymentReqDto.orderId
+        })
+      }));
     })
 
     it("주문 식별자 2에 결제 처리 중에 에러가 생겼을 경우 모든 커밋이 반영되지 않고 rollback 됨을 확인", async () => {
