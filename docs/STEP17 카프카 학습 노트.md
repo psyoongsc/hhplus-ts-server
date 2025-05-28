@@ -569,41 +569,43 @@ sequenceDiagram
     Client->>Controller: POST /createOrder
     Controller->>Service: createOrder()
     Service->>DB: Save Order (Tx)
-    Service->>OutboxTable: Insert Event (Tx)
+    Service->>OutboxTable: Insert Event (status: init) (Tx)
     Service-->>Controller: OK
 
-    Note over Scheduler: runs every X seconds
-    Scheduler->>OutboxTable: SELECT unsent events
+    Note over Scheduler: every 5s, check init & expired events
+    Scheduler->>OutboxTable: SELECT WHERE status = init AND createdAt <= now - 5m
     Scheduler->>Kafka: publish(event)
     Kafka-->>Scheduler: ack
-    Scheduler->>OutboxTable: mark as sent
+    Scheduler->>OutboxTable: UPDATE status = resent
+
+    Note over Service: before processing
+    Service->>OutboxTable: SELECT ... FOR UPDATE WHERE id = ?
+    Service->>OutboxTable: UPDATE status = received
+
+    Note over Service: after processing logic
+    Service->>OutboxTable: UPDATE status = done
 
 ```
 
 ### 9-3. 구현 예시
 
 ```tsx
-// src/outbox/entity/outbox.entity.ts
+// prisma/schema.prisma
 
-@Entity('outbox')
-export class OutboxEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
+model Outbox {
+  id        Int           @id @default(autoincrement())
+  topic     String
+  key       String
+  value     Json
+  status    OutboxStatus  @default(init)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
 
-  @Column()
-  eventType: string;
-
-  @Column('jsonb')
-  payload: Record<string, any>;
-
-  @Column({ default: false })
-  sent: boolean;
-
-  @CreateDateColumn()
-  createdAt: Date;
-  
-  @UpdateDateColumn()
-  updatedAt: Date;
+enum OutboxStatus {
+  init       // 이벤트 초기 생성 상태 (트랜잭션 중 작성됨)
+  received   // Consumer 가 조회하여 로직을 수행 중
+  done       // 처리 완료
 }
 ```
 
@@ -616,23 +618,27 @@ sent 필드 값을 통해서 정상적으로 Broker에 메시지가 적재되었
 </aside>
 
 ```tsx
-// src/order/service/order.service.ts
-
-async createOrder(orderDto: CreateOrderDto): Promise<void> {
-  await this.prisma.$transaction(async (tx) => {
-    const order = await tx.order.create({ data: orderDto });
-
-    await tx.outbox.create({
-      data: {
-        eventType: 'OrderCreated',
-        payload: {
-          orderId: order.id,
-          userId: order.userId,
-        },
-      },
-    });
+await this.prisma.$transaction(async (tx) => {
+  await tx.order.create({
+    data: {
+      userId: 123,
+      totalAmount: 15000,
+    },
   });
-}
+
+  await tx.outbox.create({
+    data: {
+      topic: 'order.created',
+      key: 'order-123',
+      value: {
+        orderId: 123,
+        userId: 456,
+        totalAmount: 15000,
+      },
+      status: 'init', // enum 생략 가능
+    },
+  });
+});
 ```
 
 <aside>
@@ -645,21 +651,52 @@ async createOrder(orderDto: CreateOrderDto): Promise<void> {
 ```tsx
 // src/outbox/service/outbox.publisher.ts
 
-@Interval(5000)
-async handleOutboxPublishing() {
-  const unsent = await this.outboxRepo.find({
-    where: { sent: false },
-    take: 10,
-  });
+import { Injectable } from '@nestjs/common';
+import { Interval } from '@nestjs/schedule';
+import { OutboxStatus } from '@prisma/client';
+import { subMinutes } from 'date-fns';
 
-  for (const event of unsent) {
-    await this.kafkaService.publish({
-      topic: event.eventType,
-      key: String(event.id),
-      value: event.payload,
+@Injectable()
+export class OutboxPublisher {
+  constructor(
+    private readonly outboxRepo: OutboxRepository, // Prisma 또는 Custom Repo
+    private readonly kafkaService: KafkaEventPublisherService,
+  ) {}
+
+  @Interval(5000) // 5초마다 실행
+  async handleOutboxPublishing() {
+    const fiveMinutesAgo = subMinutes(new Date(), 5);
+
+    const pendingEvents = await this.outboxRepo.findMany({
+      where: {
+        status: OutboxStatus.init,
+        createdAt: {
+          lte: fiveMinutesAgo,
+        },
+      },
+      take: 10,
+      orderBy: {
+        createdAt: 'asc',
+      },
     });
 
-    await this.outboxRepo.update(event.id, { sent: true });
+    for (const event of pendingEvents) {
+      try {
+        await this.kafkaService.publish({
+          topic: event.topic,
+          key: event.key,
+          value: event.value,
+        });
+
+        await this.outboxRepo.update({
+          where: { id: event.id },
+          data: { status: OutboxStatus.done },
+        });
+      } catch (error) {
+        // 실패 시 처리 (e.g. 로그 남기기, retry count 증가 등)
+        console.error(`Failed to publish outbox event ID=${event.id}:`, error);
+      }
+    }
   }
 }
 ```
