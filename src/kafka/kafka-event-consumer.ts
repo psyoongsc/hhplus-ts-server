@@ -1,15 +1,30 @@
-import { Injectable, OnModuleDestroy } from "@nestjs/common";
+import { Injectable, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import { Consumer, EachMessagePayload, Kafka } from "kafkajs";
 import { IEventConsumer } from "./event-consumer.interface";
 
 @Injectable()
-export class KafkaEventConsumer implements OnModuleDestroy {
-  private readonly kafka = new Kafka({
-    clientId: 'ecommerce-server',
-    brokers: ['localhost:9092', 'localhost:9093', 'localhost:9094'],
-  });
-
+export class KafkaEventConsumer implements OnModuleInit, OnModuleDestroy {
+  private kafka: Kafka;
   private consumers: Consumer[] = [];
+  private isTestMode: boolean;
+
+  constructor() {
+    this.isTestMode = process.env.KAFKA_TEST_MODE === 'true';
+  }
+
+  async onModuleInit() {
+    if(this.isTestMode) {
+      this.kafka = new Kafka({
+        clientId: 'ecommerce-server',
+        brokers: [`${process.env.KAFKA_HOST}:${process.env.KAFKA_PORT}`]
+      })
+    } else {
+      this.kafka = new Kafka({
+        clientId: 'ecommerce-server',
+        brokers: ['localhost:9092', 'localhost:9093', 'localhost:9094'],
+      });
+    }
+  }
 
   async register(consumerImpl: IEventConsumer) {
     const consumer = this.kafka.consumer({ 

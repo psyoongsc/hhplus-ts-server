@@ -10,17 +10,18 @@ import { IMEMBER_COUPON_INDEX_REPOSITORY } from "./domain/repository/member_coup
 import { MemberCouponIndexRepository } from "./infrastructure/member_coupon_index.repository";
 import { RedisModule } from "@app/redis/redis.module";
 import { CouponRedisService } from "./domain/service/coupon.redis.service";
-import { CouponSchedulerService } from "./domain/service/coupon.scheduler.service";
 import { ICOUPON_REDIS_REPOSITORY } from "./domain/repository/coupon.redis.repository.interface";
 import { CouponRedisRepository } from "./infrastructure/coupon.redis.repository";
+import { KafkaModule } from "@app/kafka/kafka.module";
+import { IssueCouponRequestedConsumer } from "./infrastructure/issue-coupon-requested.consumer";
 
 @Module({
-  imports: [PrismaModule, RedisModule],
+  imports: [PrismaModule, RedisModule, KafkaModule],
   controllers: [CouponController],
   providers: [
     CouponService,
     CouponRedisService,
-    CouponSchedulerService,
+    IssueCouponRequestedConsumer,
     {
       provide: ICOUPON_REPOSITORY,
       useClass: CouponRepository

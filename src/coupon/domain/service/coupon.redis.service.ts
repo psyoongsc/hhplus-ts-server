@@ -13,6 +13,8 @@ import { UseCouponResult } from "../dto/use-coupon.result.dto";
 import { ICOUPON_REDIS_REPOSITORY } from "../repository/coupon.redis.repository.interface";
 import { CouponRedisRepository } from "@app/coupon/infrastructure/coupon.redis.repository";
 import { DistributedLock } from "@app/redis/redisDistributedLock.decorator";
+import { KafkaEventPublisherService } from "@app/kafka/kafka-event-publisher.service";
+import { IssueCouponRequstedEvent } from "@app/common/events/issue-coupon-requested.event";
 
 @Injectable()
 export class CouponRedisService {
@@ -25,7 +27,8 @@ export class CouponRedisService {
     // private readonly memberCouponIndexRepository: MemberCouponIndexRepository,
     private readonly transactionService: TransactionService,
     @Inject(ICOUPON_REDIS_REPOSITORY)
-    private readonly couponRedisRepoistory: CouponRedisRepository
+    private readonly couponRedisRepoistory: CouponRedisRepository, 
+    private readonly kafkaPublisher: KafkaEventPublisherService
   ) {}
 
   async getAllCoupons(txc?: Prisma.TransactionClient): Promise<CouponResult[]> {
@@ -50,43 +53,68 @@ export class CouponRedisService {
     return;
   }
 
-  async requestIssueCoupon(command: IssueCouponCommand, txc?: Prisma.TransactionClient): Promise<boolean> {
-    const memberId = command.memberId;
+  async requestIssueCoupon(command: IssueCouponCommand, txc?: Prisma.TransactionClient): Promise<void> {
     const couponId = command.couponId;
+    const memberId = command.memberId;
 
-    return await this.transactionService.executeInTransaction(async (tx) => {
+    const topic = 'issue.coupon.requested';
+    const key = couponId.toString();
+
+    let outboxId: number= -1;
+    await this.transactionService.executeInTransaction(async (tx) => {
       const client = txc ?? tx;
 
-      return await this.couponRedisRepoistory.enrollWaitQueue(couponId, memberId);
+      const result = await client.outbox.create({
+        data: {
+          topic,
+          key,
+          value: { couponId, memberId },
+          status: 'init', // enum 생략 가능
+        },
+      });
+      outboxId = result.id;
     });
+
+    const value = JSON.stringify(new IssueCouponRequstedEvent(outboxId, couponId, memberId));
+    this.kafkaPublisher.publish({ topic, key, value })
+
+    return;
   }
   
-  async processIssueCoupon(couponId: number, maxCount = 10): Promise<void> {
+  async processIssueCoupon(outboxId: number, couponId: number, memberId: number): Promise<void> {
     return await this.transactionService.executeInTransaction(async (tx) => {
       const client = tx;
-    
-      const lock = await this.couponRedisRepoistory.getLockForCouponScheduler(couponId);
-      if (!lock) return;
-    
+
       try {
+        const outboxStatus = await client.$queryRawUnsafe(
+          `SELECT status FROM Outbox WHERE id = ${outboxId} FOR UPDATE`
+        )
 
-        const memberIds = await this.couponRedisRepoistory.getMembersInQueue(couponId, maxCount);
-    
-        for (const memberId of memberIds) {
-          const result = await this.couponRedisRepoistory.issueCoupon(couponId, Number(memberId));
+        if(outboxStatus[0].status != 'init') return;
+
+        await client.outbox.update({
+          where: { id: outboxId },
+          data: {
+            status: 'received'
+          }
+        });
+
+        const isSuccessed = await this.couponRedisRepoistory.issueCoupon(couponId, memberId);
+
+        await client.outbox.update({
+          where: { id: outboxId },
+          data: {
+            status: 'done'
+          }
+        });
+
+      } catch (error) {
+        if(error instanceof HttpException || error instanceof PrismaClientKnownRequestError) {
+          throw error;
+        } else {
+          throw new Error("쿠폰 발급 중 예기치 못한 문제가 발생하였습니다. 관리자에게 문의해주세요.")
         }
-    
-        // ⭐️ Redis → DB 재고 동기화
-        const remainingStock = await this.couponRedisRepoistory.getCouponStock(couponId);
-        if (remainingStock !== null) {
-          await this.couponRepository.updateCouponStock(couponId, Number(remainingStock), client);
-        }
-    
-      } finally {
-        await this.couponRedisRepoistory.releaseLockForCouponScheduler(couponId);
       }
-
-      return;
     });
   }
 
