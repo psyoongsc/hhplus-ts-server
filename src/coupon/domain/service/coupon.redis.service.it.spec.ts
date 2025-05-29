@@ -13,6 +13,8 @@ import { ICOUPON_REPOSITORY } from '../repository/coupon.repository.interface';
 import { IMEMBER_COUPON_REPOSITORY } from '../repository/member_coupon.repository.interface';
 import { ICOUPON_REDIS_REPOSITORY } from '../repository/coupon.redis.repository.interface';
 import { RedisModule } from '@app/redis/redis.module';
+import { KafkaModule } from '@app/kafka/kafka.module';
+import { Kafka } from 'kafkajs';
 
 describe('CouponRedisService 통합 테스트', () => {
   let app: INestApplication;
@@ -20,12 +22,13 @@ describe('CouponRedisService 통합 테스트', () => {
   let prisma: PrismaService;
   let redis: RedisService;
 
+  const TEST_OUTBOX_ID = 1;
   const TEST_COUPON_ID = 100;
   const TEST_MEMBER_ID = 1;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [RedisModule],
+      imports: [RedisModule, KafkaModule],
       providers: [
         CouponRedisService,
         { provide: ICOUPON_REPOSITORY, useClass: CouponRepository },
@@ -60,6 +63,27 @@ describe('CouponRedisService 통합 테스트', () => {
         stock: 10,
       },
     });
+
+    // topic 생성
+    const kafka = new Kafka({
+      clientId: 'test-admin',
+      brokers: [`${process.env.KAFKA_HOST}:${process.env.KAFKA_PORT}`]
+    });
+
+    const admin = kafka.admin();
+    await admin.connect();
+
+    await admin.createTopics({
+      topics: [
+        {
+          topic: 'issue.coupon.requested',
+          numPartitions: 1,
+          replicationFactor: 1,
+        }
+      ]
+    });
+
+    await admin.disconnect();
   });
 
   afterAll(async () => {
@@ -79,7 +103,7 @@ describe('CouponRedisService 통합 테스트', () => {
     await service.requestIssueCoupon(issueCouponCommand);
 
     // 3. 발급 처리
-    await service.processIssueCoupon(TEST_COUPON_ID);
+    await service.processIssueCoupon(TEST_OUTBOX_ID, TEST_COUPON_ID, TEST_MEMBER_ID);
 
     // 4. 쿠폰 사용 처리
     const useCouponCommand: UseCouponCommand = { memberId: TEST_MEMBER_ID, couponId: TEST_COUPON_ID, amount: 1000 };
