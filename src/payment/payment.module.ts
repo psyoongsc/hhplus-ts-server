@@ -15,9 +15,10 @@ import { RedisModule } from "@app/redis/redis.module";
 import { CqrsModule } from "@nestjs/cqrs";
 import { PayCompletedListener } from "@app/notify/application/event-listener/pay-completed.listener";
 import { NotifyModule } from "@app/notify/notify.module";
+import { KafkaModule } from "@app/kafka/kafka.module";
 
 @Module({
-  imports: [PrismaModule, MemberModule, OrderModule, ProductModule, CouponModule, ProductSalesStatModule, RedisModule, CqrsModule],
+  imports: [PrismaModule, MemberModule, OrderModule, ProductModule, CouponModule, ProductSalesStatModule, RedisModule, KafkaModule],
   controllers: [PaymentController],
   providers: [
     PaymentService,

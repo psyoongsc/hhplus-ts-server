@@ -25,6 +25,7 @@ import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { PayCompletedEvent } from "@app/common/events/pay-completed.event";
 import { EventBus } from "@nestjs/cqrs";
+import { KafkaEventPublisherService } from "@app/kafka/kafka-event-publisher.service";
 
 @Injectable()
 export class PaymentFacade {
@@ -37,8 +38,7 @@ export class PaymentFacade {
     private readonly couponService: CouponService,
     private readonly productSalesStatService: ProductSalesStatService,
     private readonly lockService: DistributedLockService,
-    private readonly eventEmitter: EventEmitter2,
-    private readonly eventBus: EventBus
+    private readonly kafkaEventPublisher: KafkaEventPublisherService
   ) {}
 
   @DistributedMultiLock([
@@ -102,9 +102,11 @@ export class PaymentFacade {
         };
         await this.productSalesStatService.addProductSalesStat(addProductSalesStatCommand, client);
 
-        const event: PayCompletedEvent = { order };
-        this.eventEmitter.emit('pay.completed', event);
-        this.eventBus.publish(new PayCompletedEvent(order));
+        this.kafkaEventPublisher.publish({
+          topic: 'pay.completed',
+          key: orderId.toString(),
+          value: JSON.stringify(new PayCompletedEvent(order))
+        })
 
         return payment;
       } catch(error) {
