@@ -148,3 +148,19 @@ model Order_Denorm {
 
   @@index([orderId])
 }
+
+model Outbox {
+  id        Int           @id @default(autoincrement())
+  topic     String
+  key       String
+  value     Json
+  status    OutboxStatus  @default(init)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+enum OutboxStatus {
+  init       // 이벤트 초기 생성 상태 (트랜잭션 중 작성됨)
+  received   // Consumer 가 조회하여 로직을 수행 중
+  done       // 처리 완료
+}

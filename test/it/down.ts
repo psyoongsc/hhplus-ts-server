@@ -9,4 +9,9 @@ export default async () => {
     await globalThis.__REDIS_CONTAINER__.stop();
     console.log('🧹 Redis TestContainer stopped');
   }
+
+  if(globalThis.__KAFKA_CONTAINER__) {
+    await globalThis.__KAFKA_CONTAINER__.stop();
+    console.log('🧹 Kafka TestContainer stopped')
+  }
 };

@@ -13,6 +13,8 @@ import { RedisModule } from "./redis/redis.module";
 import { SalesStatScheduler } from "./common/schedules/salesStats.scheduler.service";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { NotifyModule } from "./notify/notify.module";
+import { KafkaModule } from "./kafka/kafka.module";
+import { OutboxModule } from "./outbox/outbox.module";
 
 @Module({
   imports: [
@@ -26,6 +28,8 @@ import { NotifyModule } from "./notify/notify.module";
     RedisModule,
     EventEmitterModule.forRoot(),
     NotifyModule,
+    KafkaModule,
+    OutboxModule
   ],
   providers: [
     ViewRefreshService,
