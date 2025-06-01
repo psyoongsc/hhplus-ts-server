@@ -14,6 +14,7 @@ import { SalesStatScheduler } from "./common/schedules/salesStats.scheduler.serv
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { NotifyModule } from "./notify/notify.module";
 import { KafkaModule } from "./kafka/kafka.module";
+import { OutboxModule } from "./outbox/outbox.module";
 
 @Module({
   imports: [
@@ -27,7 +28,8 @@ import { KafkaModule } from "./kafka/kafka.module";
     RedisModule,
     EventEmitterModule.forRoot(),
     NotifyModule,
-    KafkaModule
+    KafkaModule,
+    OutboxModule
   ],
   providers: [
     ViewRefreshService,

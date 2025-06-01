@@ -8,6 +8,8 @@ import { MemberCouponRepository } from '@app/coupon/infrastructure/member_coupon
 import { CouponRedisRepository } from '@app/coupon/infrastructure/coupon.redis.repository';
 import { TransactionService } from '@app/database/prisma/transaction.service';
 import { BadRequestException } from '@nestjs/common';
+import { KafkaEventPublisherService } from '@app/kafka/kafka-event-publisher.service';
+import { IssueCouponRequstedEvent } from '@app/common/events/issue-coupon-requested.event';
 
 describe('CouponRedisService 단위 테스트', () => {
   let service: CouponRedisService;
@@ -39,6 +41,10 @@ describe('CouponRedisService 단위 테스트', () => {
     executeInTransaction: jest.fn().mockImplementation(fn => fn({})),
   };
 
+  const mockKafkaPublisher = {
+    publish: jest.fn(),
+  }
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -47,6 +53,7 @@ describe('CouponRedisService 단위 테스트', () => {
         { provide: IMEMBER_COUPON_REPOSITORY, useValue: mockMemberCouponRepo },
         { provide: ICOUPON_REDIS_REPOSITORY, useValue: mockRedisRepo },
         { provide: TransactionService, useValue: mockTxService },
+        { provide: KafkaEventPublisherService, useValue: mockKafkaPublisher }
       ],
     }).compile();
 
@@ -71,24 +78,97 @@ describe('CouponRedisService 단위 테스트', () => {
 
   describe('requestIssueCoupon()', () => {
     it('쿠폰 발급 대기열에 멤버를 등록할 수 있다', async () => {
-      mockRedisRepo.enrollWaitQueue.mockResolvedValueOnce(true);
-      const result = await service.requestIssueCoupon({ couponId: 1, memberId: 2 });
-      expect(result).toBe(true);
-      expect(mockRedisRepo.enrollWaitQueue).toHaveBeenCalledWith(1, 2);
+      const topic = 'issue.coupon.requested';
+      const key = '1'
+      const value = JSON.stringify(new IssueCouponRequstedEvent(1, 1, 2));
+
+      // Outbox 저장용 트랜잭션 Mock
+      const mockCreate = jest.fn().mockResolvedValueOnce({ id: 1 });
+      mockTxService.executeInTransaction.mockImplementationOnce(async (fn) => {
+        await fn({ outbox: { create: mockCreate } }); // tx.outbox.create
+      });
+      
+      await service.requestIssueCoupon({ couponId: 1, memberId: 2 });
+      
+      expect(mockCreate).toHaveBeenCalledWith({
+        data: {
+          topic,
+          key,
+          value: { couponId: 1, memberId: 2 },
+          status: 'init',
+        },
+      });
+      expect(mockKafkaPublisher.publish).toHaveBeenCalledWith({topic, key, value});
     });
   });
 
   describe('processIssueCoupon()', () => {
-    it('락을 획득하면 대기열의 멤버에게 쿠폰을 발급하고 재고를 DB에 동기화한다', async () => {
-      mockRedisRepo.getLockForCouponScheduler.mockResolvedValueOnce(true);
-      mockRedisRepo.getMembersInQueue.mockResolvedValueOnce([1, 2]);
-      mockRedisRepo.getCouponStock.mockResolvedValueOnce(8);
+    const outboxId = 1;
+    const couponId = 1;
+    const memberId = 2;
 
-      await service.processIssueCoupon(1);
+    const mockUpdate = jest.fn();
+    const mockQueryRawUnsafe = jest.fn();
+    const mockIssueCoupon = jest.fn();
 
-      expect(mockRedisRepo.issueCoupon).toHaveBeenCalledTimes(2);
-      expect(mockCouponRepo.updateCouponStock).toHaveBeenCalledWith(1, 8, expect.anything());
-      expect(mockRedisRepo.releaseLockForCouponScheduler).toHaveBeenCalled();
+    afterEach(() => {
+      jest.clearAllMocks();
+    })
+
+    it('status가 init이면 쿠폰 발급을 진행하고 상태를 done으로 변경한다', async () => {
+      mockQueryRawUnsafe.mockResolvedValueOnce([{ status: 'init' }]);
+      mockIssueCoupon.mockResolvedValueOnce(true);
+      mockTxService.executeInTransaction.mockImplementation(async (fn) => {
+        return await fn({
+          $queryRawUnsafe: mockQueryRawUnsafe,
+          outbox: { update: mockUpdate },
+        });
+      });
+
+      mockRedisRepo.issueCoupon = mockIssueCoupon;
+
+      await service.processIssueCoupon(outboxId, couponId, memberId);
+
+      expect(mockQueryRawUnsafe).toHaveBeenCalledWith(
+        `SELECT status FROM Outbox WHERE id = ${outboxId} FOR UPDATE`
+      );
+      expect(mockUpdate).toHaveBeenCalledWith({
+        where: { id: outboxId },
+        data: { status: 'received' },
+      });
+      expect(mockIssueCoupon).toHaveBeenCalledWith(couponId, memberId);
+      expect(mockUpdate).toHaveBeenCalledWith({
+        where: { id: outboxId },
+        data: { status: 'done' },
+      });
+    });
+
+    it('status가 init이 아니면 아무 것도 하지 않는다', async () => {
+      mockQueryRawUnsafe.mockResolvedValueOnce([{ status: 'done' }]);
+      mockTxService.executeInTransaction.mockImplementation(async (fn) => {
+        return await fn({
+          $queryRawUnsafe: mockQueryRawUnsafe,
+          outbox: { update: mockUpdate },
+        });
+      });
+
+      mockRedisRepo.issueCoupon = mockIssueCoupon;
+
+      await service.processIssueCoupon(outboxId, couponId, memberId);
+
+      expect(mockQueryRawUnsafe).toHaveBeenCalledWith(
+        `SELECT status FROM Outbox WHERE id = ${outboxId} FOR UPDATE`
+      );
+      expect(mockUpdate).not.toHaveBeenCalled();
+      expect(mockIssueCoupon).not.toHaveBeenCalled();
+    });
+
+    it('알 수 없는 에러 발생 시 커스텀 에러를 throw한다', async () => {
+      mockQueryRawUnsafe.mockRejectedValueOnce(new Error('DB connection lost'));
+
+      await expect(
+        service.processIssueCoupon(outboxId, couponId, memberId)
+      ).rejects.toThrow('쿠폰 발급 중 예기치 못한 문제가 발생하였습니다. 관리자에게 문의해주세요.');
     });
   });
 
