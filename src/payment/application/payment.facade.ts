@@ -22,9 +22,7 @@ import { PayOrderCommand } from "@app/order/domain/dto/pay-order.command.dto";
 import { DistributedLock, DistributedMultiLock } from "@app/redis/redisDistributedLock.decorator";
 import { DistributedLockService } from "@app/redis/redisDistributedLock.service";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
-import { EventEmitter2 } from "@nestjs/event-emitter";
 import { PayCompletedEvent } from "@app/common/events/pay-completed.event";
-import { EventBus } from "@nestjs/cqrs";
 import { KafkaEventPublisherService } from "@app/kafka/kafka-event-publisher.service";
 
 @Injectable()
@@ -74,17 +72,17 @@ export class PaymentFacade {
         // 잔액 차감
         const amount = this.calculateTotalAmount(order.orderProducts);
         const useCouponCommand: UseCouponCommand = { memberId, couponId, amount };
-        const {coupon, discountedAmount} = await this.couponService.useCoupon(useCouponCommand, client);
+        //const {coupon, discountedAmount} = await this.couponService.useCoupon(useCouponCommand, client);
 
         const useBalanceCommand: UseBalanceCommand = {
           memberId,
-          amount: discountedAmount,
+          amount,
         };
         await this.memberService.useBalance(useBalanceCommand, client);
 
         // 결제 정보 저장
         const today = new Date();
-        const processPaymentCommand: ProcessPaymentCommand = { orderId, memberId, couponId, approved_at: today, amount: discountedAmount };
+        const processPaymentCommand: ProcessPaymentCommand = { orderId, memberId, couponId, approved_at: today, amount };
         const payment: Payment = await this.paymentService.processPayment(processPaymentCommand, client);
 
         // 판매 이력 저장
@@ -115,13 +113,13 @@ export class PaymentFacade {
         // Kafka 와 같은 MQ 솔루션을 이용해 보상 트랜잭션 발행 방식으로 변경할 필요 있음.
         if(productResult != undefined) {
           await this.productService.deductProductStockBulk_rollback(deductStockCommands);
-          console.log(1)
+          console.log(`orderId: ${orderId} :: 결제 에러 발생으로 인한 재고 rollback`)
         }
 
         if(error instanceof HttpException || error instanceof PrismaClientKnownRequestError) {
           throw error;
         } else {
-          throw new Error("주문 결제 중 예기치 못한 문제가 발생하였습니다. 관리자에게 문의해주세요.")
+          throw new Error("주문 결제 중 예기치 못한 문제가 발생하였습니다. 관리자에게 문의해주세요.\n" + error)
         }
       }
     });

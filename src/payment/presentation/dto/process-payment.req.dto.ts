@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsInt, IsPositive, Max } from "class-validator";
+import { IsInt, IsOptional, IsPositive, Max } from "class-validator";
 
 export class ProcessPaymentReqDto {
   @IsInt()
@@ -17,6 +17,7 @@ export class ProcessPaymentReqDto {
   @IsInt()
   @IsPositive()
   @Max(2_147_483_647)
+  @IsOptional()
   @ApiProperty({ example: 1, description: "쿠폰 식별자" })
-  couponId: number;
+  couponId?: number;
 }
