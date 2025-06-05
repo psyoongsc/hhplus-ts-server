@@ -1,4 +1,4 @@
-import { IsInt, IsPositive, Max } from "class-validator";
+import { IsInt, IsOptional, IsPositive, Max } from "class-validator";
 
 export class ProcessPaymentFacadeReqDto {
   @IsInt()
@@ -14,5 +14,6 @@ export class ProcessPaymentFacadeReqDto {
   @IsInt()
   @IsPositive()
   @Max(2_147_483_647)
-  couponId: number;
+  @IsOptional()
+  couponId?: number;
 }

@@ -14,6 +14,9 @@ services:
       ZOOKEEPER_SERVER_ID: 1
     volumes:
       - /etc/localtime:/etc/localtime:ro
+    networks:
+      kafka-cluster:
+        ipv4_address: 172.19.0.2
 
   kafka-cluster1:
     image: confluentinc/cp-kafka:latest
@@ -32,6 +35,9 @@ services:
       KAFKA_DEFAULT_REPLICATION_FACTOR: 3
     volumes:
       - /etc/localtime:/etc/localtime:ro
+    networks:
+      kafka-cluster:
+        ipv4_address: 172.19.0.3
 
   kafka-cluster2:
     image: confluentinc/cp-kafka:latest
@@ -50,6 +56,9 @@ services:
       KAFKA_DEFAULT_REPLICATION_FACTOR: 3
     volumes:
       - /etc/localtime:/etc/localtime:ro
+    networks:
+      kafka-cluster:
+        ipv4_address: 172.19.0.4
 
   kafka-cluster3:
     image: confluentinc/cp-kafka:latest
@@ -68,3 +77,13 @@ services:
       KAFKA_DEFAULT_REPLICATION_FACTOR: 3
     volumes:
       - /etc/localtime:/etc/localtime:ro
+    networks:
+      kafka-cluster:
+        ipv4_address: 172.19.0.5
+
+networks:
+  kafka-cluster:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.19.0.0/16

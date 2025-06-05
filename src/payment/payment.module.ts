@@ -12,9 +12,7 @@ import { PaymentFacade } from "./application/payment.facade";
 import { PrismaClient } from "@prisma/client";
 import { CouponModule } from "@app/coupon/coupon.module";
 import { RedisModule } from "@app/redis/redis.module";
-import { CqrsModule } from "@nestjs/cqrs";
 import { PayCompletedListener } from "@app/notify/application/event-listener/pay-completed.listener";
-import { NotifyModule } from "@app/notify/notify.module";
 import { KafkaModule } from "@app/kafka/kafka.module";
 
 @Module({

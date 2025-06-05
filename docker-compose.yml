@@ -1,8 +1,72 @@
 version: '3'
+
 services:
-  hhplus-nest-app:
+  hhplus-nestjs-app:
     build: .
     ports:
       - '3000:3000'
+    depends_on:
+      - local-redis
+      - local-kafka
+    volumes:
+      - ./logs:/app/logs
     environment:
-      - NODE_ENV=production
+      NODE_ENV: production
+      DATABASE_URL: mysql://root:18698273@host.docker.internal:3307/hhplus
+      KAFKAJS_NO_PARTITIONER_WARNING: 1
+      REDIS_CLUSTER_MODE: false
+      REDIS_HOST: local-redis
+      REDIS_PORT: 7010
+      KAFKA_TEST_MODE: true
+      KAFKA_HOST: local-kafka
+      KAFKA_PORT: 7020
+    deploy:
+      resources:
+        limits:
+          cpus: '4.00'
+          memory: '8G'
+
+  local-redis:
+    image: redis:latest
+    container_name: local-redis
+    ports:
+      - "7010:7010"
+    command: ["redis-server", "--port", "7010"]
+
+  local-zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: local-zookeeper
+    ports:
+      - "7030:7030"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 7030
+      ZOOKEEPER_TICK_TIME: 2000
+
+  local-kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: local-kafka
+    depends_on:
+      - local-zookeeper
+    ports:
+      - "7020:7020"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: local-zookeeper:7030
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://local-kafka:7020
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:7020
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  local-kafka-ui:
+    image: provectuslabs/kafka-ui
+    container_name: local-kafka-ui
+    depends_on:
+      - local-zookeeper
+      - local-kafka
+    ports:
+      - "8990:8080"
+    restart: always
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=local-kafka:7020
+      - KAFKA_CLUSTERS_0_ZOOKEEPER=local-zookeeper:7030

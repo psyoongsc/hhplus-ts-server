@@ -25,7 +25,9 @@ export class PaymentRepository extends PrismaRepository<Payment> implements IPay
     return await client.payment.create({
       data: {
         order: { connect: { id: orderId } },
-        coupon: { connect: { id: couponId }},
+        ...(couponId && {
+          coupon: { connect: { id: couponId } },
+        }),
         member: { connect: { id: memberId } },
         paid_amount,
         approved_at,
