@@ -11,7 +11,6 @@ import { APP_INTERCEPTOR } from "@nestjs/core";
 import { DuplicateRequestInterceptor } from "./common/interceptors/duplicate-request.interceptor";
 import { RedisModule } from "./redis/redis.module";
 import { SalesStatScheduler } from "./common/schedules/salesStats.scheduler.service";
-import { EventEmitterModule } from "@nestjs/event-emitter";
 import { NotifyModule } from "./notify/notify.module";
 import { KafkaModule } from "./kafka/kafka.module";
 import { OutboxModule } from "./outbox/outbox.module";
@@ -26,7 +25,6 @@ import { OutboxModule } from "./outbox/outbox.module";
     PaymentModule,
     ScheduleModule.forRoot(),
     RedisModule,
-    EventEmitterModule.forRoot(),
     NotifyModule,
     KafkaModule,
     OutboxModule
@@ -34,10 +32,10 @@ import { OutboxModule } from "./outbox/outbox.module";
   providers: [
     ViewRefreshService,
     SalesStatScheduler,
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: DuplicateRequestInterceptor,
-    },
+    // {
+    //   provide: APP_INTERCEPTOR,
+    //   useClass: DuplicateRequestInterceptor,
+    // },
   ],
 })
 export class AppModule {}

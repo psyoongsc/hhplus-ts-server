@@ -21,7 +21,7 @@ export class KafkaEventConsumer implements OnModuleInit, OnModuleDestroy {
     } else {
       this.kafka = new Kafka({
         clientId: 'ecommerce-server',
-        brokers: ['localhost:9092', 'localhost:9093', 'localhost:9094'],
+        brokers: ['172.19.0.3:9092', '172.19.0.4:9093', '172.19.0.5:9094'],
       });
     }
   }

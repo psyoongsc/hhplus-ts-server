@@ -16,12 +16,12 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   onModuleInit() {
     if(this.isClusterMode) {
       const clusterNodes = [
-        { host: '127.0.0.1', port: 7001 },
-        { host: '127.0.0.1', port: 7002 },
-        { host: '127.0.0.1', port: 7003 },
-        { host: '127.0.0.1', port: 7004 },
-        { host: '127.0.0.1', port: 7005 },
-        { host: '127.0.0.1', port: 7006 },
+        { host: '172.18.0.2', port: 7001 },
+        { host: '172.18.0.3', port: 7002 },
+        { host: '172.18.0.4', port: 7003 },
+        { host: '172.18.0.5', port: 7004 },
+        { host: '172.18.0.6', port: 7005 },
+        { host: '172.18.0.7', port: 7006 },
       ];
 
       const clusterOptions: Redis.ClusterOptions = {
