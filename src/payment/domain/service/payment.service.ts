@@ -49,7 +49,7 @@ export class PaymentService {
         if(error instanceof HttpException || error instanceof PrismaClientKnownRequestError) {
           throw error;
         } else {
-          throw new Error("결제 중 예기치 못한 문제가 발생하였습니다. 관리자에게 문의해주세요.")
+          throw new Error("결제 중 예기치 못한 문제가 발생하였습니다. 관리자에게 문의해주세요.\n" + error)
         }
       }
     });
